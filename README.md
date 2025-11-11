@@ -71,3 +71,9 @@ VITE_APP_NAME="${APP_NAME}"
 
 SANCTUM_STATEFUL_DOMAINS=localhost:5173,127.0.0.1:5173
 SESSION_DOMAIN=.localhost
+
+
+.env frontend
+
+VITE_ESEWASECRET = 8gBm/:&EnhH.1/q
+
