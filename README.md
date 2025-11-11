@@ -1,4 +1,5 @@
 .enc backend
+
 APP_NAME=BrewBox
 APP_ENV=local
 APP_KEY=base64:tMFEIvwbtnvIVaJ2zqiNpBRezcpDxSRtpAoCt4SeADk=
