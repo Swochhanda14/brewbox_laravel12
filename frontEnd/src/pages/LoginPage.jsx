@@ -50,8 +50,29 @@ const LoginPage = (props) => {
 
       toast.success('Logged in Successfully');
     } catch (err) {
+      // Handle Laravel validation errors
+      if (err?.data?.errors) {
+        const errors = err.data.errors;
+        // Check for specific field errors
+        if (errors.email && errors.email.length > 0) {
+          toast.error(errors.email[0]);
+          return;
+        }
+        if (errors.password && errors.password.length > 0) {
+          toast.error(errors.password[0]);
+          return;
+        }
+        // If there are other errors, show the first one
+        const firstError = Object.values(errors)[0];
+        if (firstError && firstError.length > 0) {
+          toast.error(firstError[0]);
+          return;
+        }
+      }
+      
+      // Handle general error messages
       const msg = err?.data?.message || err?.error || '';
-      if (typeof msg === 'string') {
+      if (typeof msg === 'string' && msg.trim()) {
         const lower = msg.toLowerCase();
         if (
           lower.includes('invalid') ||
@@ -61,8 +82,10 @@ const LoginPage = (props) => {
           toast.error('Incorrect email or password');
           return;
         }
+        toast.error(msg);
+      } else {
+        toast.error('Login failed. Please check your credentials.');
       }
-      toast.error(msg || 'Login failed');
     }
   };
 

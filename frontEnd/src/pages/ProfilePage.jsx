@@ -34,15 +34,108 @@ const ProfilePage = (props) => {
 
     const submitHandler= async(e)=>{
         e.preventDefault();
-        if(password!==confirmPassword){
-            toast.error("Password donot match!");
-        }else{
-            try{
-                const res = await updateProfile({_id:userInfo._id,name,email,number,password}).unwrap();
-                dispatch(setCredentials(res));
-                toast.success("Profile Updated Successfully");
-            }catch(error){
-                toast.error(error?.data?.message || error.error);
+
+        const trimmedName = name.trim();
+        const emailPattern = /^\S+@\S+\.\S+$/;
+        const passwordComplexity = /^(?=.*[A-Z])(?=.*[!@#$%^&*()[\]{}_\-+=~`|\\:;"'<>,.?/]).{8,}$/;
+
+        // Username validation
+        if (trimmedName.length < 5) {
+            toast.error("Username must be at least 5 characters");
+            return;
+        }
+
+        // Email validation
+        if(!emailPattern.test(email)){
+            toast.error("Please enter a valid email address");
+            return;
+        }
+
+        // Phone number validation: must be 10 digits and start with 98
+        if(!/^98\d{8}$/.test(number)){
+            toast.error("Phone number must be 10 digits and start with 98");
+            return;
+        }
+
+        // Password validation (only if password is provided)
+        if(password || confirmPassword){
+            if(password !== confirmPassword){
+                toast.error("Password donot match!");
+                return;
+            }
+            // Password complexity
+            if(!passwordComplexity.test(password)){
+                toast.error("Password must be at least 8 characters, include 1 uppercase letter and 1 symbol");
+                return;
+            }
+        }
+
+        try{
+            // Only send password if it's provided
+            const updateData = {_id:userInfo._id, name: trimmedName, email, number};
+            if(password){
+                updateData.password = password;
+            }
+            
+            const res = await updateProfile(updateData).unwrap();
+            // Preserve the token when updating credentials
+            const updatedUserInfo = {
+                ...res,
+                token: userInfo.token, // Preserve existing token
+            };
+            dispatch(setCredentials(updatedUserInfo));
+            toast.success("Profile Updated Successfully");
+            // Clear password fields after successful update
+            setPassword("");
+            setConfirmPassword("");
+        }catch(error){
+            // Handle Laravel validation errors
+            if (error?.data?.errors) {
+                const errors = error.data.errors;
+                // Check for specific field errors
+                if (errors.name && errors.name.length > 0) {
+                    toast.error(errors.name[0]);
+                    return;
+                }
+                if (errors.email && errors.email.length > 0) {
+                    toast.error(errors.email[0]);
+                    return;
+                }
+                if (errors.number && errors.number.length > 0) {
+                    toast.error(errors.number[0]);
+                    return;
+                }
+                if (errors.password && errors.password.length > 0) {
+                    toast.error(errors.password[0]);
+                    return;
+                }
+                // If there are other errors, show the first one
+                const firstError = Object.values(errors)[0];
+                if (firstError && firstError.length > 0) {
+                    toast.error(firstError[0]);
+                    return;
+                }
+            }
+            
+            // Handle general error messages
+            const msg = error?.data?.message || error?.error || '';
+            if (typeof msg === 'string' && msg.trim()) {
+                const lower = msg.toLowerCase();
+                if ((lower.includes('email')) && (lower.includes('taken') || lower.includes('exists') || lower.includes('already'))) {
+                    toast.error("Email already in use");
+                    return;
+                }
+                if ((lower.includes('phone') || lower.includes('number')) && (lower.includes('taken') || lower.includes('exists') || lower.includes('already'))) {
+                    toast.error("Phone number already in use");
+                    return;
+                }
+                if ((lower.includes('username') || lower.includes('name')) && (lower.includes('taken') || lower.includes('exists') || lower.includes('already'))) {
+                    toast.error("Username already in use");
+                    return;
+                }
+                toast.error(msg);
+            } else {
+                toast.error("Profile update failed. Please check your input.");
             }
         }
     }
@@ -67,23 +160,23 @@ const ProfilePage = (props) => {
           <form onSubmit={submitHandler} className='mt-6 sm:mt-10 flex flex-col gap-6 w-full sm:w-2/3 md:w-4/5 lg:w-2/3 px-2 sm:px-0'>
             <div className='flex flex-col gap-2'>
               <label className='text-lg sm:text-xl font-semibold text-gray-600' htmlFor="name">Username</label>
-              <input className='border rounded p-2 text-base sm:text-lg' type="text" placeholder='John Doe' value={name} onChange={(e)=>setName(e.target.value)} />
+              <input className='border rounded p-2 text-base sm:text-lg' type="text" placeholder='John Doe' value={name} onChange={(e)=>setName(e.target.value)} required minLength={5} />
             </div>
             <div className='flex flex-col gap-2'>
               <label className='text-lg sm:text-xl font-semibold text-gray-600' htmlFor="email">Email</label>
-              <input className='border rounded p-2 text-base sm:text-lg' type="text" placeholder='example@gmail.com' value={email} onChange={(e)=>setEmail(e.target.value)} />
+              <input className='border rounded p-2 text-base sm:text-lg' type="email" placeholder='example@gmail.com' value={email} onChange={(e)=>setEmail(e.target.value)} required inputMode="email" />
             </div>
             <div className='flex flex-col gap-2'>
               <label className='text-lg sm:text-xl font-semibold text-gray-600' htmlFor="number">Phone Number</label>
-              <input className='border rounded p-2 text-base sm:text-lg' type="text" placeholder='98XXXXXXXX' value={number} onChange={(e)=>setNumber(e.target.value)} />
+              <input className='border rounded p-2 text-base sm:text-lg' type="tel" placeholder='98XXXXXXXX' value={number} onChange={(e)=>setNumber(e.target.value)} required inputMode="numeric" pattern="^98\d{8}$" />
             </div>
             <div className='flex flex-col gap-2'>
-              <label className='text-lg sm:text-xl font-semibold text-gray-600' htmlFor="password">Password</label>
-              <input className='border rounded p-2 text-base sm:text-lg' type="password" placeholder='Enter Password' value={password} onChange={(e)=>setPassword(e.target.value)} />
+              <label className='text-lg sm:text-xl font-semibold text-gray-600' htmlFor="password">Password (Leave blank to keep current password)</label>
+              <input className='border rounded p-2 text-base sm:text-lg' type="password" placeholder='Enter New Password' value={password} onChange={(e)=>setPassword(e.target.value)} minLength={8} />
             </div>
             <div className='flex flex-col gap-2'>
               <label className='text-lg sm:text-xl font-semibold text-gray-600' htmlFor="confirmPassword">Confirm Password</label>
-              <input className='border rounded p-2 text-base sm:text-lg' type="password" placeholder='Re-enter Password' value={confirmPassword} onChange={(e)=>setConfirmPassword(e.target.value)} />
+              <input className='border rounded p-2 text-base sm:text-lg' type="password" placeholder='Re-enter Password' value={confirmPassword} onChange={(e)=>setConfirmPassword(e.target.value)} minLength={8} />
             </div>
             <button type='submit' className='py-3 px-7 bg-green-800 text-base sm:text-lg text-white font-semibold rounded hover:bg-green-700 hover:cursor-pointer'>Update</button>
             {loadingUpdateProfile && <>Loading...</> }

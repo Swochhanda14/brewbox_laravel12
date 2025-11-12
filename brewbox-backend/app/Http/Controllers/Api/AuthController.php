@@ -12,10 +12,16 @@ class AuthController extends Controller
     // Login
     public function login(Request $request)
     {
+        $messages = [
+            'email.required' => 'Email is required',
+            'email.email' => 'Please enter a valid email address',
+            'password.required' => 'Password is required',
+        ];
+
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
-        ]);
+        ], $messages);
 
         $user = User::where('email', $request->email)->first();
 
@@ -45,18 +51,44 @@ class AuthController extends Controller
     // Register
     public function register(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:6',
-            'number' => 'nullable|string',
-        ]);
+        // Custom validation messages
+        $messages = [
+            'name.required' => 'Username is required',
+            'name.min' => 'Username must be at least 5 characters',
+            'name.unique' => 'Username is already taken',
+            'email.required' => 'Email is required',
+            'email.email' => 'Please enter a valid email address',
+            'email.unique' => 'Email is already in use',
+            'password.required' => 'Password is required',
+            'password.min' => 'Password must be at least 8 characters',
+            'password.regex' => 'Password must contain at least 1 uppercase letter and 1 symbol',
+            'number.required' => 'Phone number is required',
+            'number.regex' => 'Phone number must be 10 digits and start with 98',
+            'number.unique' => 'Phone number is already in use',
+        ];
+
+        $validated = $request->validate([
+            'name' => 'required|string|min:5|max:255|unique:users,name',
+            'email' => 'required|string|email|max:255|unique:users,email',
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'regex:/^(?=.*[A-Z])(?=.*[!@#$%^&*()[\]{}_\-+=~`|\\:;"\'<>,.?\/]).+$/',
+            ],
+            'number' => [
+                'required',
+                'string',
+                'regex:/^98\d{8}$/',
+                'unique:users,number',
+            ],
+        ], $messages);
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => $request->password, // Will be auto-hashed
-            'number' => $request->number,
+            'name' => trim($validated['name']),
+            'email' => $validated['email'],
+            'password' => $validated['password'], // Will be auto-hashed
+            'number' => $validated['number'],
         ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -100,17 +132,52 @@ class AuthController extends Controller
     {
         $user = $request->user();
 
-        $request->validate([
-            'name' => 'string|max:255',
-            'email' => 'string|email|max:255|unique:users,email,' . $user->id,
-            'number' => 'nullable|string',
-            'password' => 'nullable|string|min:6',
+        // Custom validation messages
+        $messages = [
+            'name.required' => 'Username is required',
+            'name.min' => 'Username must be at least 5 characters',
+            'name.unique' => 'Username is already taken',
+            'email.required' => 'Email is required',
+            'email.email' => 'Please enter a valid email address',
+            'email.unique' => 'Email is already in use',
+            'password.min' => 'Password must be at least 8 characters',
+            'password.regex' => 'Password must contain at least 1 uppercase letter and 1 symbol',
+            'number.required' => 'Phone number is required',
+            'number.regex' => 'Phone number must be 10 digits and start with 98',
+            'number.unique' => 'Phone number is already in use',
+        ];
+
+        // Build validation rules
+        $rules = [
+            'name' => 'required|string|min:5|max:255|unique:users,name,' . $user->id,
+            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'number' => [
+                'required',
+                'string',
+                'regex:/^98\d{8}$/',
+                'unique:users,number,' . $user->id,
+            ],
+        ];
+
+        // Password validation is optional - only validate if provided
+        if ($request->filled('password')) {
+            $rules['password'] = [
+                'string',
+                'min:8',
+                'regex:/^(?=.*[A-Z])(?=.*[!@#$%^&*()[\]{}_\-+=~`|\\:;"\'<>,.?\/]).+$/',
+            ];
+        }
+
+        $validated = $request->validate($rules, $messages);
+
+        $user->fill([
+            'name' => trim($validated['name']),
+            'email' => $validated['email'],
+            'number' => $validated['number'],
         ]);
 
-        $user->fill($request->only(['name', 'email', 'number']));
-
         if ($request->filled('password')) {
-            $user->password = $request->password; // Will be auto-hashed
+            $user->password = $validated['password']; // Will be auto-hashed
         }
 
         $user->save();

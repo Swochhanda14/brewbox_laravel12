@@ -108,11 +108,11 @@ const AdminUserList = () => {
                             <tbody className="divide-y divide-gray-300 ">
                                 {users.map((user) => (
                                     <tr
-                                        key={user.id}
+                                        key={user.id || user._id}
                                         className="bg-white transition-all duration-500 hover:bg-gray-50"
                                     >
                                         <td className="p-5 whitespace-nowrap text-sm leading-6 font-medium text-gray-900 ">
-                                            {user.id}
+                                            {user.id || user._id}
                                         </td>
                                         <td className="p-5 whitespace-nowrap text-sm leading-6 font-medium text-gray-900">
                                             {user.name}
@@ -125,12 +125,12 @@ const AdminUserList = () => {
                                         </td>
                                         <td className=" p-5 ">
                                             <div className="flex items-center gap-1">
-                                                <Link to={`/admin/user/${user.id}/edit`}>
+                                                <Link to={`/admin/user/${user.id || user._id}/edit`}>
                                                 <button className="p-2 rounded-full text-blue-500 hover:cursor-pointer disabled:opacity-50" disabled={loadingDelete}>
                                                     <FaEdit />
                                                 </button>
                                                 </Link>
-                                                <button onClick={()=>deleteHandler(user.id)} className="p-2 rounded-full text-red-600 hover:cursor-pointer disabled:opacity-50" disabled={loadingDelete}>
+                                                <button onClick={()=>deleteHandler(user.id || user._id)} className="p-2 rounded-full text-red-600 hover:cursor-pointer disabled:opacity-50" disabled={loadingDelete}>
                                                     <FaTrash />
                                                 </button>
                                             </div>

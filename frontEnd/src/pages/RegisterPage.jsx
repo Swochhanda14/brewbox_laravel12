@@ -66,9 +66,39 @@ const RegisterPage = (props) => {
         const res = await register({name: trimmedName,email,password,number}).unwrap();
         dispatch(setCredentials({...res,}));
         navigate(redirect);
+        toast.success('Registration successful!');
       }catch(err){
+        // Handle Laravel validation errors
+        if (err?.data?.errors) {
+          const errors = err.data.errors;
+          // Check for specific field errors
+          if (errors.name && errors.name.length > 0) {
+            toast.error(errors.name[0]);
+            return;
+          }
+          if (errors.email && errors.email.length > 0) {
+            toast.error(errors.email[0]);
+            return;
+          }
+          if (errors.number && errors.number.length > 0) {
+            toast.error(errors.number[0]);
+            return;
+          }
+          if (errors.password && errors.password.length > 0) {
+            toast.error(errors.password[0]);
+            return;
+          }
+          // If there are other errors, show the first one
+          const firstError = Object.values(errors)[0];
+          if (firstError && firstError.length > 0) {
+            toast.error(firstError[0]);
+            return;
+          }
+        }
+        
+        // Handle general error messages
         const msg = err?.data?.message || err?.error || '';
-        if (typeof msg === 'string') {
+        if (typeof msg === 'string' && msg.trim()) {
           const lower = msg.toLowerCase();
           if ((lower.includes('email')) && (lower.includes('taken') || lower.includes('exists') || lower.includes('already'))) {
             toast.error("Email already in use");
@@ -82,8 +112,10 @@ const RegisterPage = (props) => {
             toast.error("Username already in use");
             return;
           }
+          toast.error(msg);
+        } else {
+          toast.error("Registration failed. Please check your input.");
         }
-        toast.error(msg || "Registration failed");
       }
     }
 

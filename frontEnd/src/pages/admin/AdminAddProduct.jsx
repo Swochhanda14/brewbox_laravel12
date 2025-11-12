@@ -4,6 +4,8 @@ import {
 	useCreateProductMutation,
 	useUploadProductImageMutation,
 } from "../../slices/productApiSlice";
+import { apiSlice } from "../../slices/apiSlice";
+import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import { BASE_URL } from "../../constants";
 
@@ -18,6 +20,7 @@ const AdminAddProduct = () => {
 
 	const [createProduct, { isLoading: loadingCreate, error }] =
 		useCreateProductMutation();
+	const dispatch = useDispatch();
 
 	const [uploadProductImage, { isLoading: loadingUpload }] =
 		useUploadProductImageMutation();
@@ -48,6 +51,10 @@ const AdminAddProduct = () => {
 				countInStock,
 				description,
 			}).unwrap();
+			
+			// Invalidate all product queries to force refetch
+			dispatch(apiSlice.util.invalidateTags(['Products', 'Product']));
+			
 			toast.success("Product Added Successfully!");
 			navigate("/admin/productlist");
 		} catch (err) {

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useUpdateProductMutation, useGetProductDetailsQuery, useUploadProductImageMutation } from '../../slices/productApiSlice';
+import { apiSlice } from '../../slices/apiSlice';
+import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
 import { BASE_URL } from '../../constants';
 
@@ -18,6 +20,7 @@ const AdminUpdateProduct = () => {
 
   const { data: product, isLoading, refetch, error } = useGetProductDetailsQuery(productId);
   const [updateProduct, { isLoading: loadingUpdate }] = useUpdateProductMutation();
+  const dispatch = useDispatch();
 
   const [uploadProductImage, { isLoading: loadingUpload }] = useUploadProductImageMutation();
 
@@ -49,6 +52,10 @@ const AdminUpdateProduct = () => {
         countInStock: Number(countInStock),
         description: description
       }).unwrap();
+      
+      // Invalidate all product queries to force refetch
+      dispatch(apiSlice.util.invalidateTags(['Products', 'Product']));
+      
       toast.success("Product Updated Successfully!");
       navigate('/admin/productlist', { replace: true });
     } catch (err) {
