@@ -5,7 +5,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useLoginMutation } from '../slices/usersApiSlice';
 import { setCredentials } from '../slices/authSlice';
 import { toast } from 'react-toastify';
-import api from '../services/api';
 
 const LoginPage = (props) => {
   const [email, setEmail] = useState('');
@@ -30,6 +29,15 @@ const LoginPage = (props) => {
   // Login handler
   const submitHandler = async (e) => {
     e.preventDefault();
+    const emailPattern = /^\S+@\S+\.\S+$/;
+    if (!emailPattern.test(email)) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+    if (password.length < 8) {
+      toast.error('Password must be at least 8 characters long');
+      return;
+    }
     try {
       // Call login mutation
       const res = await login({ email, password }).unwrap();
@@ -42,7 +50,19 @@ const LoginPage = (props) => {
 
       toast.success('Logged in Successfully');
     } catch (err) {
-      toast.error(err?.data?.message || err.error || 'Login failed');
+      const msg = err?.data?.message || err?.error || '';
+      if (typeof msg === 'string') {
+        const lower = msg.toLowerCase();
+        if (
+          lower.includes('invalid') ||
+          lower.includes('incorrect') ||
+          lower.includes('unauthorized')
+        ) {
+          toast.error('Incorrect email or password');
+          return;
+        }
+      }
+      toast.error(msg || 'Login failed');
     }
   };
 
@@ -65,6 +85,7 @@ const LoginPage = (props) => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              inputMode="email"
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -78,6 +99,7 @@ const LoginPage = (props) => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              minLength={8}
             />
           </div>
           <button
