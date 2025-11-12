@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate,Link } from 'react-router-dom';
 import { useUpdateUserMutation, useGetUserDetailsQuery, useGetUsersQuery } from '../../slices/usersApiSlice';
 import { toast } from 'react-toastify';
+import { FaArrowLeft, FaSpinner, FaSave, FaUserShield } from 'react-icons/fa';
 
 const AdminUpdateUser = () => {
       const { id: userIdParam } = useParams();
@@ -120,44 +121,110 @@ const AdminUpdateUser = () => {
 
          
   if (isLoading) {
-    return <div className='flex justify-center items-center h-64'><p>Loading...</p></div>;
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <FaSpinner className="text-5xl text-green-700 animate-spin mb-4" />
+        <p className="text-gray-600">Loading user details...</p>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className='flex justify-center items-center h-64'><p>Error loading user details</p></div>;
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+        <p className="text-red-600">Error loading user details</p>
+      </div>
+    );
   }
 
   return (
-     <div className=''>
-        <div className='flex flex-col items-center gap-5 mb-10 mt-5'>
-            <Link to='/admin/userlist' className='bg-green-700 text-white px-2 py-1 rounded'>Go Back</Link>
-        <h2 className="text-2xl font-bold mt-4 text-gray-700">Update User Detail</h2>
-        {loadingUpdate && <p>Loading...</p>}
-        <form onSubmit={submitHandler} className='w-full max-w-md mt-8 flex flex-col gap-6 px-4'>
+     <div className="w-full">
+        <div className="mb-6">
+          <Link 
+            to='/admin/userlist' 
+            className="inline-flex items-center gap-2 text-gray-600 hover:text-green-700 transition-colors mb-4"
+          >
+            <FaArrowLeft />
+            <span className="font-medium">Back to Users</span>
+          </Link>
+          <h2 className="text-3xl font-bold text-gray-800 mb-2">Update User</h2>
+          <p className="text-gray-600">Edit user information and permissions</p>
+        </div>
+        {loadingUpdate && (
+          <div className="flex items-center justify-center gap-2 text-green-700 mb-4">
+            <FaSpinner className="animate-spin" />
+            <span>Updating user...</span>
+          </div>
+        )}
+        <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 sm:p-8 max-w-2xl">
+          <form onSubmit={submitHandler} className='flex flex-col gap-6'>
             <div className='flex flex-col gap-2'>
-            <label className='text-xl font-semibold text-gray-600'  htmlFor="name">Username</label>
-            <input className='border rounded p-2 text-lg' type="text" placeholder='John Doe' value={name ?? ''} onChange={(e)=>setName(e.target.value)} required minLength={5} />
+              <label className='text-sm font-semibold text-gray-700' htmlFor="name">Username</label>
+              <input 
+                className='border border-gray-300 rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-gray-50 hover:bg-white' 
+                type="text" 
+                placeholder='John Doe' 
+                value={name ?? ''} 
+                onChange={(e)=>setName(e.target.value)} 
+                required 
+                minLength={5} 
+              />
             </div>
             <div className='flex flex-col gap-2'>
-            <label className='text-xl font-semibold text-gray-600'  htmlFor="email">Email</label>
-            <input className='border rounded p-2 text-lg' type="email" placeholder='example@gmail.com' value={email ?? ''} onChange={(e)=>setEmail(e.target.value)} required inputMode="email" />
+              <label className='text-sm font-semibold text-gray-700' htmlFor="email">Email</label>
+              <input 
+                className='border border-gray-300 rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-gray-50 hover:bg-white' 
+                type="email" 
+                placeholder='example@gmail.com' 
+                value={email ?? ''} 
+                onChange={(e)=>setEmail(e.target.value)} 
+                required 
+                inputMode="email" 
+              />
             </div>
             <div className='flex flex-col gap-2'>
-            <label className='text-xl font-semibold text-gray-600'  htmlFor="number">Phone Number</label>
-            <input className='border rounded p-2 text-lg' type="tel" placeholder='98XXXXXXXX' value={number ?? ''} onChange={(e)=>setNumber(e.target.value)} required inputMode="numeric" pattern="^98\d{8}$" />
+              <label className='text-sm font-semibold text-gray-700' htmlFor="number">Phone Number</label>
+              <input 
+                className='border border-gray-300 rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-gray-50 hover:bg-white' 
+                type="tel" 
+                placeholder='98XXXXXXXX' 
+                value={number ?? ''} 
+                onChange={(e)=>setNumber(e.target.value)} 
+                required 
+                inputMode="numeric" 
+                pattern="^98\d{8}$" 
+              />
             </div>
-            <div className='flex items-center gap-2'>
-            <input 
-              type="checkbox" 
-              id="isAdmin" 
-              checked={isAdmin} 
-              onChange={(e)=>setIsAdmin(e.target.checked)}
-              className='w-5 h-5'
-            />
-            <label className='text-xl font-semibold text-gray-600' htmlFor="isAdmin">Admin User</label>
+            <div className='flex items-center gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200'>
+              <input 
+                type="checkbox" 
+                id="isAdmin" 
+                checked={isAdmin} 
+                onChange={(e)=>setIsAdmin(e.target.checked)}
+                className='w-5 h-5 accent-green-600'
+              />
+              <label className='text-sm font-semibold text-gray-700 flex items-center gap-2 cursor-pointer' htmlFor="isAdmin">
+                <FaUserShield className="text-green-600" />
+                Admin User
+              </label>
             </div>
-            <button type='submit' className='py-3 px-7 bg-green-800 text-lg text-white font-semibold rounded hover:bg-green-700 hover:cursor-pointer disabled:opacity-50' disabled={loadingUpdate}>Update</button>
-        </form>
+            <div className="flex gap-4 pt-4">
+              <button 
+                type='submit' 
+                className='flex-1 sm:flex-none px-8 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2' 
+                disabled={loadingUpdate}
+              >
+                {loadingUpdate ? <FaSpinner className="animate-spin" /> : <FaSave />}
+                {loadingUpdate ? "Updating..." : "Update User"}
+              </button>
+              <Link
+                to="/admin/userlist"
+                className="px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                Cancel
+              </Link>
+            </div>
+          </form>
         </div>
       </div>
   )

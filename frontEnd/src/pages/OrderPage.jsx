@@ -2,13 +2,12 @@ import { useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
-// import Message from '../components/Message';
-// import Loader from '../components/Loader';
 import {
   useDeliverOrderMutation,
   useGetOrderDetailsQuery,
 } from '../slices/ordersApiSlice';
 import { BASE_URL } from '../constants';
+import { FaSpinner, FaCheckCircle, FaTimes, FaTruck, FaCreditCard, FaShoppingBag, FaMapMarkerAlt, FaEnvelope, FaPhone, FaUser } from 'react-icons/fa';
 
 const OrderPage = () => {
   const { id: orderId } = useParams();
@@ -31,123 +30,218 @@ const OrderPage = () => {
     toast.success('Order marked as delivered');
   };
 
-  return isLoading ? (
-    <>Loading...</>
-  ) : error ? (
-    <>{error.data.message}</>
-  ) : (
-    <div className="container mx-auto px-2 sm:px-6 py-4 sm:py-6">
-      <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Order {order.id ?? order._id}</h1>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-        {/* Left Section */}
-        <div className="md:col-span-2 space-y-4 sm:space-y-6">
-          {/* Shipping Info */}
-          <div className="p-3 sm:p-4 border rounded-lg shadow-sm bg-white">
-            <h2 className="text-lg sm:text-xl font-semibold mb-1 sm:mb-2">Shipping</h2>
-            <p>
-              <span className="font-medium">Name:</span> {order.user?.name}
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center py-20">
+          <FaSpinner className="text-5xl text-green-700 animate-spin mb-4" />
+          <h2 className="text-2xl font-semibold text-gray-700">Loading Order Details...</h2>
+        </div>
+      ) : error ? (
+        <div className="max-w-2xl mx-auto px-4 py-12">
+          <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+            <FaTimes className="text-4xl text-red-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-red-800 mb-2">Error Loading Order</h2>
+            <p className="text-red-600">{error.data?.message || error.error || "Unable to load order details"}</p>
+          </div>
+        </div>
+      ) : (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+          <div className="mb-8">
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">
+              Order <span className="text-green-700">#{order.id ?? order._id}</span>
+            </h1>
+            <p className="text-gray-600">
+              Order placed on {(order.created_at ?? order.createdAt) ? (order.created_at ?? order.createdAt).substring(0, 10) : 'N/A'}
             </p>
-            <p>
-              <span className="font-medium">Contact:</span> {order.user?.number}
-            </p>
-            <p>
-              <span className="font-medium">Email:</span>{' '}
-              <a href={`mailto:${order.user?.email}`} className="text-blue-600 underline">
-                {order.user?.email}
-              </a>
-            </p>
-            <p>
-              <span className="font-medium">Address:</span>{' '}
-              {(() => {
-                const shipping = order.shippingAddress ?? order.shipping_address ?? {};
-                return `${shipping.address ?? ''}${shipping.city ? ', ' + shipping.city : ''}`;
-              })()}
-            </p>
-            {(order.is_delivered ?? order.isDelivered) ? (
-              <div className= 'mt-3 sm:mt-5 p-3 sm:p-5 rounded bg-green-200 text-green-900'>Delivered on {order.delivered_at ?? order.deliveredAt}</div>
-            ) : (
-              <div className= 'mt-3 sm:mt-5 p-3 sm:p-5 rounded bg-red-200 text-red-900'>Not Delivered</div>
-            )}
           </div>
 
-          {/* Payment Method */}
-          <div className="p-3 sm:p-4 border rounded-lg shadow-sm bg-white">
-            <h2 className="text-lg sm:text-xl font-semibold mb-1 sm:mb-2">Payment Method</h2>
-            <p className='flex gap-2'>
-              <span className="font-medium ">Method:</span><span className='uppercase'>{order.paymentMethod ?? order.payment_method}</span>
-            </p>
-            
-          </div>
-
-          {/* Order Items */}
-          <div className="p-3 sm:p-4 border rounded-lg shadow-sm bg-white">
-            <h2 className="text-lg sm:text-xl font-semibold mb-1 sm:mb-2">Order Items</h2>
-            {(order.orderItems ?? order.order_items)?.length === 0 ? (
-              <>Order is empty</>
-            ) : (
-              <ul className="space-y-3 sm:space-y-4">
-                {(order.orderItems ?? order.order_items).map((item, index) => (
-                  <li key={index} className="flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-0">
-                    <div className='flex items-center gap-2'>
-                      <img
-                        src={`${BASE_URL}${item.image}`}
-                        alt={item.name}
-                        className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded"
-                      />
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center">
-                        <Link to={`/product/${(item.product?.id ?? item.product?._id ?? item.product)}`} className="text-blue-600 underline text-base sm:text-lg truncate max-w-[120px] sm:max-w-xs">
-                          {item.name}
-                        </Link>
-                        <div className="text-xs sm:text-lg text-gray-600 capitalize ml-0 sm:ml-2">
-                          {item.product?.category === 'Subscription' && (
-                            <span className="mr-2 text-green-600">Roast: {item.roast}</span>
-                          )}
-                          (Size: {item.size}, Grind: {item.grind})
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+            {/* Left Section */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Shipping Info */}
+              <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 sm:p-8">
+                <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
+                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                    <FaTruck className="text-xl text-green-700" />
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Shipping Information</h2>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <FaUser className="text-green-700" />
+                    <div>
+                      <p className="text-sm text-gray-500">Name</p>
+                      <p className="font-semibold text-gray-800">{order.user?.name}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <FaPhone className="text-green-700" />
+                    <div>
+                      <p className="text-sm text-gray-500">Contact</p>
+                      <p className="font-semibold text-gray-800">{order.user?.number}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <FaEnvelope className="text-green-700" />
+                    <div>
+                      <p className="text-sm text-gray-500">Email</p>
+                      <a href={`mailto:${order.user?.email}`} className="font-semibold text-green-700 hover:text-green-800 transition-colors">
+                        {order.user?.email}
+                      </a>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <FaMapMarkerAlt className="text-green-700 mt-1" />
+                    <div>
+                      <p className="text-sm text-gray-500">Address</p>
+                      <p className="font-semibold text-gray-800">
+                        {(() => {
+                          const shipping = order.shippingAddress ?? order.shipping_address ?? {};
+                          return `${shipping.address ?? ''}${shipping.city ? ', ' + shipping.city : ''}`;
+                        })()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-6 pt-6 border-t border-gray-200">
+                    {(order.is_delivered ?? order.isDelivered) ? (
+                      <div className="flex items-center gap-3 p-4 rounded-lg bg-green-50 border border-green-200">
+                        <FaCheckCircle className="text-2xl text-green-700" />
+                        <div>
+                          <p className="font-semibold text-green-800">Delivered</p>
+                          <p className="text-sm text-green-700">
+                            {order.delivered_at ?? order.deliveredAt ? `Delivered on ${(order.delivered_at ?? order.deliveredAt).substring(0, 10)}` : 'Order has been delivered'}
+                          </p>
                         </div>
                       </div>
+                    ) : (
+                      <div className="flex items-center gap-3 p-4 rounded-lg bg-yellow-50 border border-yellow-200">
+                        <FaTimes className="text-2xl text-yellow-700" />
+                        <div>
+                          <p className="font-semibold text-yellow-800">Not Delivered</p>
+                          <p className="text-sm text-yellow-700">Your order is being processed</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment Method */}
+              <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 sm:p-8">
+                <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
+                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                    <FaCreditCard className="text-xl text-green-700" />
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Payment Method</h2>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="px-4 py-2 bg-green-100 text-green-800 font-semibold rounded-lg uppercase">
+                    {order.paymentMethod ?? order.payment_method}
+                  </span>
+                </div>
+              </div>
+
+              {/* Order Items */}
+              <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 sm:p-8">
+                <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
+                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                    <FaShoppingBag className="text-xl text-green-700" />
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Order Items</h2>
+                </div>
+                {(order.orderItems ?? order.order_items)?.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-600">Order is empty</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {(order.orderItems ?? order.order_items).map((item, index) => (
+                      <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <Link to={`/product/${(item.product?.id ?? item.product?._id ?? item.product)}`} className="flex-shrink-0">
+                          <img
+                            src={`${BASE_URL}${item.image}`}
+                            alt={item.name}
+                            className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-lg border border-gray-200 shadow-sm"
+                          />
+                        </Link>
+                        <div className="flex-1 min-w-0">
+                          <Link 
+                            to={`/product/${(item.product?.id ?? item.product?._id ?? item.product)}`}
+                            className="text-base sm:text-lg font-semibold text-gray-800 hover:text-green-700 transition-colors block mb-1"
+                          >
+                            {item.name}
+                          </Link>
+                          <div className="text-sm text-gray-600 space-y-1">
+                            {item.product?.category === 'Subscription' && (
+                              <span className="inline-block px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-semibold mr-2">
+                                Roast: {item.roast}
+                              </span>
+                            )}
+                            <span className="capitalize">Size: {item.size}, Grind: {item.grind}</span>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm text-gray-600 mb-1">
+                            {item.qty} x Rs.{item.price}
+                          </p>
+                          <p className="text-lg font-bold text-green-700">
+                            Rs.{(item.qty * item.price).toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Right Section - Order Summary */}
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 sticky top-24">
+                <h2 className="text-xl font-bold text-gray-800 mb-6 pb-4 border-b border-gray-200">Order Summary</h2>
+                <div className="space-y-4 mb-6">
+                  <div className="flex justify-between text-base">
+                    <span className="text-gray-600">Items</span>
+                    <span className="font-semibold text-gray-800">Rs.{order.items_price ?? order.itemsPrice}</span>
+                  </div>
+                  <div className="flex justify-between text-base">
+                    <span className="text-gray-600">Shipping</span>
+                    <span className="font-semibold text-gray-800">Rs.{order.shipping_price ?? order.shippingPrice}</span>
+                  </div>
+                  <div className="flex justify-between text-base">
+                    <span className="text-gray-600">Tax</span>
+                    <span className="font-semibold text-gray-800">Rs.{order.tax_price ?? order.taxPrice}</span>
+                  </div>
+                  <div className="border-t border-gray-200 pt-4 mt-4">
+                    <div className="flex justify-between text-lg">
+                      <span className="font-bold text-gray-800">Total</span>
+                      <span className="font-bold text-green-700 text-xl">Rs.{order.total_price ?? order.totalPrice}</span>
                     </div>
-                    <div className="text-xs sm:text-lg mt-1 sm:mt-0">
-                      {item.qty} x Rs.{item.price} = Rs.{(item.qty * item.price).toFixed(2)}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
+                  </div>
+                </div>
+
+                {/* Admin: Mark as Delivered */}
+                {loadingDeliver && (
+                  <div className="flex items-center justify-center gap-2 text-green-700 mb-4">
+                    <FaSpinner className="animate-spin" />
+                    <span>Updating...</span>
+                  </div>
+                )}
+                {userInfo && userInfo.isAdmin && !(order.is_delivered ?? order.isDelivered) && (
+                  <button
+                    onClick={deliverHandler}
+                    disabled={loadingDeliver}
+                    className="w-full py-3 px-6 bg-gradient-to-r from-green-700 to-green-800 text-white font-semibold rounded-lg hover:from-green-800 hover:to-green-900 transition-all duration-300 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                  >
+                    Mark As Delivered
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
-
-        {/* Right Section - Order Summary */}
-        <div className="p-3 sm:p-4 border rounded-lg shadow-sm bg-white space-y-3 sm:space-y-4 mt-6 md:mt-0">
-          <h2 className="text-lg sm:text-xl font-semibold">Order Summary</h2>
-          <div className="flex justify-between text-xs sm:text-base">
-            <span>Items</span>
-            <span>Rs.{order.items_price ?? order.itemsPrice}</span>
-          </div>
-          <div className="flex justify-between text-xs sm:text-base">
-            <span>Shipping</span>
-            <span>Rs.{order.shipping_price ?? order.shippingPrice}</span>
-          </div>
-          <div className="flex justify-between text-xs sm:text-base">
-            <span>Tax</span>
-            <span>Rs.{order.tax_price ?? order.taxPrice}</span>
-          </div>
-          <div className="flex justify-between font-bold border-t pt-2 text-base sm:text-lg">
-            <span>Total</span>
-            <span>Rs.{order.total_price ?? order.totalPrice}</span>
-          </div>
-
-          {/* Admin: Mark as Delivered */}
-          {loadingDeliver && <>Loading...</>}
-          {userInfo && userInfo.isAdmin && !(order.is_delivered ?? order.isDelivered) && (
-            <button
-              onClick={deliverHandler}
-              className="w-full mt-3 sm:mt-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
-            >
-              Mark As Delivered
-            </button>
-          )}
-        </div>
-      </div>
+      )}
     </div>
   );
 };

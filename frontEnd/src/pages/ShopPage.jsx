@@ -4,6 +4,7 @@ import ProductCard from "../components/ProductCard";
 import { useParams } from "react-router-dom";
 import { useGetProductsQuery } from "../slices/productApiSlice";
 import Paginate from "../components/Paginate.jsx";
+import { FaFilter, FaTimes, FaSpinner } from "react-icons/fa";
 
 const ShopPage = (props) => {
   const { pageNumber, keyword } = useParams();
@@ -94,42 +95,58 @@ const ShopPage = (props) => {
   };
 
   return (
-    <div>
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <Banner title={props.title} />
       {isLoading ? (
-        <div>
-          <h1>Loading...</h1>
+        <div className="flex flex-col items-center justify-center py-20">
+          <FaSpinner className="text-5xl text-green-700 animate-spin mb-4" />
+          <h2 className="text-2xl font-semibold text-gray-700">Loading Products...</h2>
+          <p className="text-gray-500 mt-2">Please wait while we fetch the best coffee for you</p>
         </div>
       ) : error ? (
-        <div>
-          {typeof error === "string"
-            ? error
-            : error?.data?.message || error?.error || JSON.stringify(error)}
+        <div className="max-w-2xl mx-auto px-4 py-12">
+          <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+            <FaTimes className="text-4xl text-red-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-red-800 mb-2">Oops! Something went wrong</h2>
+            <p className="text-red-600">
+              {typeof error === "string"
+                ? error
+                : error?.data?.message || error?.error || "Unable to load products. Please try again later."}
+            </p>
+          </div>
         </div>
       ) : products.length === 0 ? (
-        <div>
-          <h1>No Products Found...</h1>
+        <div className="max-w-2xl mx-auto px-4 py-20 text-center">
+          <div className="bg-white rounded-2xl shadow-lg p-12 border border-gray-200">
+            <h2 className="text-3xl font-bold text-gray-800 mb-4">No Products Found</h2>
+            <p className="text-lg text-gray-600 mb-6">
+              We couldn't find any products matching your criteria. Try adjusting your filters or check back later.
+            </p>
+          </div>
         </div>
       ) : (
         <>
-          <div className="flex flex-col md:flex-row gap-6 md:gap-10 px-4 sm:px-6 md:px-10 lg:px-16 py-6">
-            <aside className="md:w-64 bg-white shadow-md rounded-lg p-4 h-fit sticky top-24">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-700">
-                  Filters
-                </h3>
+          <div className="flex flex-col md:flex-row gap-6 md:gap-10 px-4 sm:px-6 md:px-10 lg:px-16 py-8">
+            <aside className="md:w-72 bg-gradient-to-br from-white via-gray-50 to-gray-100 border border-gray-200 shadow-xl rounded-2xl p-6 h-fit sticky top-24">
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+                <div className="flex items-center gap-2">
+                  <FaFilter className="text-green-700" />
+                  <h3 className="text-xl font-bold text-gray-800">
+                    Filters
+                  </h3>
+                </div>
                 <button
                   onClick={resetFilters}
-                  className="text-sm text-blue-600 hover:underline"
+                  className="text-sm font-semibold text-green-700 hover:text-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 rounded-lg px-4 py-1.5 bg-green-50 hover:bg-green-100 transition-all duration-300"
                 >
-                  Reset
+                  Reset All
                 </button>
               </div>
 
-              <div className="mb-4">
+              <div className="mb-6">
                 <label
                   htmlFor="category"
-                  className="block text-sm font-medium text-gray-600 mb-1"
+                  className="block text-sm font-bold text-gray-700 mb-3 uppercase tracking-wide"
                 >
                   Category
                 </label>
@@ -137,9 +154,9 @@ const ShopPage = (props) => {
                   id="category"
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full border rounded px-2 py-1 text-sm"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-base bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all hover:border-green-300"
                 >
-                  <option value="all">All</option>
+                  <option value="all">All Categories</option>
                   {categoryOptions.map((category) => (
                     <option key={category} value={category}>
                       {category}
@@ -148,39 +165,40 @@ const ShopPage = (props) => {
                 </select>
               </div>
 
-              <div className="mb-4">
-                <p className="text-sm font-medium text-gray-600 mb-1">
+              <div className="mb-6">
+                <p className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wide">
                   Price Range (Rs.)
                 </p>
-                <div className="flex gap-2 items-center">
+                <div className="flex gap-3 items-center">
                   <input
                     type="number"
                     value={minPrice}
                     min={priceStats.min}
                     max={priceStats.max}
                     onChange={(e) => setMinPrice(Number(e.target.value))}
-                    className="w-1/2 border rounded px-2 py-1 text-sm"
+                    className="w-1/2 border border-gray-300 rounded-lg px-3 py-2.5 text-sm bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all hover:border-green-300"
+                    placeholder="Min"
                   />
-                  <span className="text-gray-500">-</span>
+                  <span className="text-gray-500 font-semibold">-</span>
                   <input
                     type="number"
                     value={maxPrice}
                     min={priceStats.min}
                     max={priceStats.max}
                     onChange={(e) => setMaxPrice(Number(e.target.value))}
-                    className="w-1/2 border rounded px-2 py-1 text-sm"
+                    className="w-1/2 border border-gray-300 rounded-lg px-3 py-2.5 text-sm bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all hover:border-green-300"
+                    placeholder="Max"
                   />
                 </div>
-                <p className="mt-1 text-xs text-gray-500">
-                  Range: {priceStats.min.toFixed(2)} -{" "}
-                  {priceStats.max.toFixed(2)}
+                <p className="mt-3 text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
+                  Range: Rs. {priceStats.min.toFixed(2)} - Rs. {priceStats.max.toFixed(2)}
                 </p>
               </div>
 
-              <div className="mb-4">
+              <div className="mb-6">
                 <label
                   htmlFor="rating"
-                  className="block text-sm font-medium text-gray-600 mb-1"
+                  className="block text-sm font-bold text-gray-700 mb-3 uppercase tracking-wide"
                 >
                   Minimum Rating
                 </label>
@@ -188,7 +206,7 @@ const ShopPage = (props) => {
                   id="rating"
                   value={minRating}
                   onChange={(e) => setMinRating(Number(e.target.value))}
-                  className="w-full border rounded px-2 py-1 text-sm"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-base bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all hover:border-green-300"
                 >
                   <option value={0}>All ratings</option>
                   <option value={4}>4 ★ & up</option>
@@ -198,41 +216,65 @@ const ShopPage = (props) => {
                 </select>
               </div>
 
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-3 mb-6 p-3 bg-gray-50 rounded-lg">
                 <input
                   id="stock"
                   type="checkbox"
                   checked={inStockOnly}
                   onChange={(e) => setInStockOnly(e.target.checked)}
-                  className="h-4 w-4"
+                  className="h-5 w-5 accent-green-600 cursor-pointer"
                 />
                 <label
                   htmlFor="stock"
-                  className="text-sm font-medium text-gray-600"
+                  className="text-sm font-semibold text-gray-700 cursor-pointer"
                 >
                   In stock only
                 </label>
               </div>
-              <p className="text-xs text-gray-500">
-                Showing {filteredProducts.length} of {products.length} results
-              </p>
+              
+              <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
+                <p className="text-sm font-semibold text-green-800 text-center">
+                  Showing <span className="text-lg font-bold">{filteredProducts.length}</span> of{" "}
+                  <span className="text-lg font-bold">{products.length}</span> products
+                </p>
+              </div>
             </aside>
 
             <div className="flex-1">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
-                {filteredProducts.length > 0 ? (
-                  filteredProducts.map((product) => (
-                    <ProductCard
-                      product={product}
-                      key={product.id ?? product._id}
-                    />
-                  ))
-                ) : (
-                  <div className="col-span-full text-center text-gray-600 py-10 border rounded">
-                    No products match the selected filters.
+              {filteredProducts.length > 0 ? (
+                <>
+                  <div className="mb-6 flex items-center justify-between">
+                    <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">
+                      Our Products
+                      <span className="text-green-700 ml-2">({filteredProducts.length})</span>
+                    </h2>
                   </div>
-                )}
-              </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
+                    {filteredProducts.map((product) => (
+                      <ProductCard
+                        product={product}
+                        key={product.id ?? product._id}
+                      />
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="col-span-full text-center py-20">
+                  <div className="bg-white rounded-2xl shadow-lg p-12 border border-gray-200 max-w-md mx-auto">
+                    <FaFilter className="text-5xl text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-2xl font-bold text-gray-800 mb-3">No Products Match</h3>
+                    <p className="text-gray-600 mb-6">
+                      No products match the selected filters. Try adjusting your search criteria.
+                    </p>
+                    <button
+                      onClick={resetFilters}
+                      className="px-6 py-3 bg-green-700 text-white font-semibold rounded-lg hover:bg-green-800 transition-all duration-300 transform hover:scale-105"
+                    >
+                      Reset Filters
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

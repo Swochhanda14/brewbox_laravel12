@@ -8,6 +8,7 @@ import { apiSlice } from "../../slices/apiSlice";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import { BASE_URL } from "../../constants";
+import { FaArrowLeft, FaSpinner, FaTimes, FaUpload, FaPlus } from "react-icons/fa";
 
 const AdminAddProduct = () => {
 	const [name, setName] = useState("");
@@ -80,112 +81,100 @@ const AdminAddProduct = () => {
 	};
 
 	return (
-		<div className="">
-			<Link
-				to="/admin/productlist"
-				className="bg-green-700 text-white px-2 py-1 rounded"
-			>
-				Go Back
-			</Link>
-			<h2 className="text-2xl font-bold mt-4 text-gray-700">Add Product</h2>
+		<div className="w-full">
+			<div className="mb-6">
+				<Link
+					to="/admin/productlist"
+					className="inline-flex items-center gap-2 text-gray-600 hover:text-green-700 transition-colors mb-4"
+				>
+					<FaArrowLeft />
+					<span className="font-medium">Back to Products</span>
+				</Link>
+				<h2 className="text-3xl font-bold text-gray-800 mb-2">Add New Product</h2>
+				<p className="text-gray-600">Create a new product for your catalog</p>
+			</div>
 
-			{loadingCreate && <>Loading...</>}
+			{loadingCreate && (
+				<div className="flex items-center justify-center gap-2 text-green-700 mb-4">
+					<FaSpinner className="animate-spin" />
+					<span>Creating product...</span>
+				</div>
+			)}
 			{loadingUpload ? (
-				<>Loading...</>
+				<div className="flex items-center justify-center gap-2 text-blue-700 mb-4">
+					<FaSpinner className="animate-spin" />
+					<span>Uploading images...</span>
+				</div>
 			) : error ? (
-				<div className="text-red-500">
-					{error?.data?.message || error.error}
+				<div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+					<p className="text-red-600">{error?.data?.message || error.error}</p>
 				</div>
 			) : (
-				<div className="flex  gap-20">
+				<div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 sm:p-8">
 					<form
 						onSubmit={submitHandler}
-						className="flex flex-col gap-4 w-1/2 mt-10 text-gray-700"
+						className="flex flex-col gap-6"
 					>
-						<div>
-							<label htmlFor="name" className="text-lg font-semibold">
-								Product Name
-							</label>
-							<input
-								type="text"
-								id="name"
-								value={name}
-								onChange={(e) => setName(e.target.value)}
-								className="border-2 border-gray-300 rounded px-2 py-1 w-full"
-							/>
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+							<div>
+								<label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">
+									Product Name
+								</label>
+								<input
+									type="text"
+									id="name"
+									value={name}
+									onChange={(e) => setName(e.target.value)}
+									className="w-full border border-gray-300 rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-gray-50 hover:bg-white"
+									required
+								/>
+							</div>
+							<div>
+								<label htmlFor="category" className="block text-sm font-semibold text-gray-700 mb-2">
+									Category
+								</label>
+								<input
+									type="text"
+									id="category"
+									value={category}
+									onChange={(e) => setCategory(e.target.value)}
+									className="w-full border border-gray-300 rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-gray-50 hover:bg-white"
+									required
+								/>
+							</div>
 						</div>
-						<div>
-							<label htmlFor="minPrice" className="text-lg font-semibold">
-								Min Price
-							</label>
-							<input
-								type="number"
-								id="minPrice"
-								value={minPrice}
-								onChange={(e) => setMinPrice(e.target.value)}
-								className="border-2 border-gray-300 rounded px-2 py-1 w-full"
-							/>
-						</div>
-						<div>
-							<label htmlFor="maxPrice" className="text-lg font-semibold">
-								Max Price
-							</label>
-							<input
-								type="number"
-								id="maxPrice"
-								value={maxPrice}
-								onChange={(e) => setMaxPrice(e.target.value)}
-								className="border-2 border-gray-300 rounded px-2 py-1 w-full"
-							/>
-						</div>
-						<div>
-							<label htmlFor="images" className="text-lg font-semibold">
-								Images
-							</label>
-							<input
-								type="file"
-								id="images"
-								multiple
-								onChange={uploadFileHandler}
-								className="border-2 border-gray-300 rounded px-2 py-1 w-full"
-							/>
-							<div className="flex flex-wrap gap-2 mt-2">
-								{images &&
-									images.map((img, idx) => (
-										<div key={idx} className="relative">
-											<img
-												src={
-													img.startsWith("http") ? img : `${BASE_URL}${img}`
-												}
-												alt={`product-${idx}`}
-												className="w-20 h-20 object-cover border-2 border-gray-300 rounded"
-											/>
-											<button
-												type="button"
-												onClick={() => removeImageHandler(idx)}
-												className="absolute top-0 right-0 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
-												title="Remove image"
-											>
-												X
-											</button>
-										</div>
-									))}
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+							<div>
+								<label htmlFor="minPrice" className="block text-sm font-semibold text-gray-700 mb-2">
+									Min Price (Rs.)
+								</label>
+								<input
+									type="number"
+									id="minPrice"
+									value={minPrice}
+									onChange={(e) => setMinPrice(e.target.value)}
+									className="w-full border border-gray-300 rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-gray-50 hover:bg-white"
+									required
+									min="0"
+								/>
+							</div>
+							<div>
+								<label htmlFor="maxPrice" className="block text-sm font-semibold text-gray-700 mb-2">
+									Max Price (Rs.)
+								</label>
+								<input
+									type="number"
+									id="maxPrice"
+									value={maxPrice}
+									onChange={(e) => setMaxPrice(e.target.value)}
+									className="w-full border border-gray-300 rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-gray-50 hover:bg-white"
+									required
+									min="0"
+								/>
 							</div>
 						</div>
 						<div>
-							<label htmlFor="category" className="text-lg font-semibold">
-								Category
-							</label>
-							<input
-								type="text"
-								id="category"
-								value={category}
-								onChange={(e) => setCategory(e.target.value)}
-								className="border-2 border-gray-300 rounded px-2 py-1 w-full"
-							/>
-						</div>
-						<div>
-							<label htmlFor="countInStock" className="text-lg font-semibold">
+							<label htmlFor="countInStock" className="block text-sm font-semibold text-gray-700 mb-2">
 								Count In Stock
 							</label>
 							<input
@@ -193,23 +182,80 @@ const AdminAddProduct = () => {
 								id="countInStock"
 								value={countInStock}
 								onChange={(e) => setCountInStock(e.target.value)}
-								className="border-2 border-gray-300 rounded px-2 py-1 w-full"
+								className="w-full border border-gray-300 rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-gray-50 hover:bg-white"
+								required
+								min="0"
 							/>
 						</div>
 						<div>
-							<label htmlFor="description" className="text-lg font-semibold">
+							<label htmlFor="description" className="block text-sm font-semibold text-gray-700 mb-2">
 								Description
 							</label>
 							<textarea
 								id="description"
 								value={description}
 								onChange={(e) => setDecription(e.target.value)}
-								className="border-2 border-gray-300 rounded px-2 py-1 w-full"
+								rows="4"
+								className="w-full border border-gray-300 rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-gray-50 hover:bg-white resize-none"
+								required
 							/>
 						</div>
-						<button className="bg-green-700 text-white px-4 py-2 rounded">
-							Add
-						</button>
+						<div>
+							<label htmlFor="images" className="block text-sm font-semibold text-gray-700 mb-2">
+								Product Images
+							</label>
+							<div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-green-500 transition-colors">
+								<input
+									type="file"
+									id="images"
+									multiple
+									onChange={uploadFileHandler}
+									className="hidden"
+								/>
+								<label htmlFor="images" className="cursor-pointer flex flex-col items-center gap-2">
+									<FaUpload className="text-3xl text-gray-400" />
+									<span className="text-sm text-gray-600">Click to upload images</span>
+									<span className="text-xs text-gray-500">Multiple images supported</span>
+								</label>
+							</div>
+							{images.length > 0 && (
+								<div className="flex flex-wrap gap-3 mt-4">
+									{images.map((img, idx) => (
+										<div key={idx} className="relative group">
+											<img
+												src={img.startsWith("http") ? img : `${BASE_URL}${img}`}
+												alt={`product-${idx}`}
+												className="w-24 h-24 object-cover border-2 border-gray-300 rounded-lg shadow-sm"
+											/>
+											<button
+												type="button"
+												onClick={() => removeImageHandler(idx)}
+												className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-700 transition-colors"
+												title="Remove image"
+											>
+												<FaTimes />
+											</button>
+										</div>
+									))}
+								</div>
+							)}
+						</div>
+						<div className="flex gap-4 pt-4">
+							<button 
+								type="submit"
+								disabled={loadingCreate || loadingUpload}
+								className="flex-1 sm:flex-none px-8 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
+							>
+								{loadingCreate ? <FaSpinner className="animate-spin" /> : <FaPlus />}
+								{loadingCreate ? "Creating..." : "Add Product"}
+							</button>
+							<Link
+								to="/admin/productlist"
+								className="px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors"
+							>
+								Cancel
+							</Link>
+						</div>
 					</form>
 				</div>
 			)}

@@ -23,13 +23,13 @@ const ProductCard = ({ product }) => {
 	}, [product]);
 
 	return (
-		<div className="p-5 w-fit flex flex-col items-center gap-3  shadow rounded hover:shadow-lg transition ease-in-out duration-300">
-			<Link to={`/product/${product.id}`}>
+		<div className="group relative p-5 w-fit flex flex-col items-center gap-4 bg-white border border-transparent shadow rounded-xl transition-transform ease-out duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-green-200">
+			<Link to={`/product/${product.id}`} className="flex flex-col items-center gap-3">
 					{selectedImage && (
 						<img
 						src={product.image ? `${BASE_URL}${selectedImage}` : ""}
 						alt="coffee"
-						className="w-70"
+						className="w-70 h-48 object-contain transition-transform duration-300 ease-out group-hover:scale-105"
 					/>
 					)}
 				<div className="flex flex-col items-center gap-3 mt-2">
@@ -48,7 +48,7 @@ const ProductCard = ({ product }) => {
 			</Link>
 			<button
 				onClick={addToCartHandler}
-				className="px-5 py-3 bg-green-800 font-[Poppins] w-[80%] text-white font-bold hover:cursor-pointer"
+				className="px-5 py-3 bg-green-800 font-[Poppins] w-[80%] text-white font-bold rounded-lg transition-colors duration-300 hover:bg-green-700 hover:cursor-pointer"
 			>
 				Add to Cart
 			</button>

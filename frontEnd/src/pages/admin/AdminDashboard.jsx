@@ -147,111 +147,132 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="p-4">
-      <h2 className="text-3xl font-bold mb-8 text-center text-gray-800">📊 Admin Dashboard</h2>
+    <div className="w-full">
+      <div className="mb-8">
+        <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">Admin Dashboard</h2>
+        <p className="text-gray-600">Overview of your business metrics</p>
+      </div>
 
       {(loadingOrders || loadingUsers || loadingProducts) ? (
-        <p className="text-center text-gray-600">Loading...</p>
+        <div className="flex flex-col items-center justify-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mb-4"></div>
+          <p className="text-gray-600">Loading dashboard data...</p>
+        </div>
       ) : (errorOrders || errorUsers || errorProducts) ? (
-        <p className="text-red-600 text-center">
-          {errorOrders?.data?.message || errorOrders?.error || ''}
-          {errorUsers?.data?.message || errorUsers?.error || ''}
-          {errorProducts?.data?.message || errorProducts?.error || ''}
-        </p>
+        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+          <p className="text-red-600">
+            {errorOrders?.data?.message || errorOrders?.error || ''}
+            {errorUsers?.data?.message || errorUsers?.error || ''}
+            {errorProducts?.data?.message || errorProducts?.error || ''}
+          </p>
+        </div>
       ) : (
-        <div className="max-w-6xl mx-auto">
+        <div className="w-full">
           {/* Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 mb-8">
             {[
-              { label: 'Total Orders', value: stats.totalOrders, color: 'bg-green-200', icon: <FaClipboardList /> },
-              { label: 'Total Revenue', value: `Rs. ${Number(stats.totalRevenue).toFixed(2)}`, color: 'bg-blue-200', icon: <FaMoneyBillWave /> },
-              { label: 'Total Users', value: users?.length || 0, color: 'bg-yellow-200', icon: <FaUsers /> },
-              { label: 'Total Products', value: products?.length || 0, color: 'bg-purple-200', icon: <FaBox /> },
-              { label: 'Avg Order Value', value: `Rs. ${Number(stats.averageOrderValue || 0).toFixed(2)}`, color: 'bg-orange-200', icon: <FaMoneyBillWave /> },
-              { label: 'Pending Subscriptions', value: stats.pendingSubscriptions, color: 'bg-pink-200', icon: <FaStar /> },
-              { label: 'Delivered Orders', value: stats.deliveredOrders, color: 'bg-teal-200', icon: <FaTruck /> },
-              { label: 'Not Delivered Orders', value: stats.notDeliveredOrders, color: 'bg-red-200', icon: <FaTimesCircle /> },
-              { label: 'New Users (30d)', value: stats.newUsers, color: 'bg-indigo-200', icon: <FaUserPlus /> },
+              { label: 'Total Orders', value: stats.totalOrders, bgColor: 'from-blue-500 to-blue-600', icon: <FaClipboardList /> },
+              { label: 'Total Revenue', value: `Rs. ${Number(stats.totalRevenue).toFixed(2)}`, bgColor: 'from-green-500 to-green-600', icon: <FaMoneyBillWave /> },
+              { label: 'Total Users', value: users?.length || 0, bgColor: 'from-purple-500 to-purple-600', icon: <FaUsers /> },
+              { label: 'Total Products', value: products?.length || 0, bgColor: 'from-orange-500 to-orange-600', icon: <FaBox /> },
+              { label: 'Avg Order Value', value: `Rs. ${Number(stats.averageOrderValue || 0).toFixed(2)}`, bgColor: 'from-indigo-500 to-indigo-600', icon: <FaMoneyBillWave /> },
+              { label: 'Pending Subscriptions', value: stats.pendingSubscriptions, bgColor: 'from-pink-500 to-pink-600', icon: <FaStar /> },
+              { label: 'Delivered Orders', value: stats.deliveredOrders, bgColor: 'from-teal-500 to-teal-600', icon: <FaTruck /> },
+              { label: 'Not Delivered', value: stats.notDeliveredOrders, bgColor: 'from-red-500 to-red-600', icon: <FaTimesCircle /> },
+              { label: 'New Users (30d)', value: stats.newUsers, bgColor: 'from-cyan-500 to-cyan-600', icon: <FaUserPlus /> },
             ].map((card, i) => (
-              <div key={i} className={`p-4 rounded shadow-md text-center hover:scale-[1.02] transition-transform ${card.color}`}>
-                <div className="text-3xl text-gray-700 mb-2 mx-auto">{card.icon}</div>
-                <div className="text-md font-semibold">{card.label}</div>
-                <div className="text-2xl font-bold">{card.value}</div>
+              <div key={i} className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                <div className={`w-12 h-12 rounded-lg bg-gradient-to-r ${card.bgColor} flex items-center justify-center text-white text-xl mb-4`}>
+                  {card.icon}
+                </div>
+                <div className="text-sm font-semibold text-gray-600 mb-1">{card.label}</div>
+                <div className="text-2xl font-bold text-gray-800">{card.value}</div>
               </div>
             ))}
           </div>
 
           {/* Charts */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-            <div className="bg-white p-4 rounded shadow min-h-[320px] sm:min-h-[400px] flex items-center justify-center">
-              <Bar
-                data={barChartData}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    legend: { display: false },
-                    title: { display: true, text: 'Sales, Revenue & Subscriptions' },
-                  },
-                  scales: { y: { beginAtZero: true } },
-                }}
-                height={320}
-              />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">Sales Overview</h3>
+              <div className="min-h-[320px] sm:min-h-[400px]">
+                <Bar
+                  data={barChartData}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: { display: false },
+                      title: { display: false },
+                    },
+                    scales: { y: { beginAtZero: true } },
+                  }}
+                  height={320}
+                />
+              </div>
             </div>
-            <div className="bg-white p-4 rounded shadow min-h-[320px] sm:min-h-[400px] flex items-center justify-center">
-              <Line
-                data={lineChartData}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    legend: { display: false },
-                    title: { display: true, text: 'Monthly Revenue (Last 6 Months)' },
-                  },
-                  scales: { y: { beginAtZero: true } },
-                }}
-                height={320}
-              />
+            <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">Monthly Revenue Trend</h3>
+              <div className="min-h-[320px] sm:min-h-[400px]">
+                <Line
+                  data={lineChartData}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: { display: false },
+                      title: { display: false },
+                    },
+                    scales: { y: { beginAtZero: true } },
+                  }}
+                  height={320}
+                />
+              </div>
             </div>
           </div>
 
           {/* Bottom Cards */}
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-white p-6 rounded-2xl shadow-md hover:shadow-lg transition text-center">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-lg border border-blue-200 p-6 hover:shadow-xl transition-shadow">
               <div className="text-lg font-semibold mb-3 text-gray-800">Top Selling Product</div>
               {stats.topProduct ? (
                 <div>
                   <div className="text-2xl font-bold text-blue-700">{stats.topProduct.name}</div>
-                  <div className="text-gray-600 mt-1">Sold: {stats.topProduct.qty}</div>
+                  <div className="text-gray-600 mt-1">Sold: {stats.topProduct.qty} units</div>
                 </div>
               ) : (
-                <div className="text-gray-500">No sales data</div>
+                <div className="text-gray-500">No sales data available</div>
               )}
             </div>
-            <div className="bg-white p-6 rounded-2xl shadow-md hover:shadow-lg transition text-center">
+            <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl shadow-lg border border-indigo-200 p-6 hover:shadow-xl transition-shadow">
               <div className="text-lg font-semibold mb-3 text-gray-800">Total Subscriptions</div>
               <div className="text-3xl font-bold text-indigo-700">{stats.totalSubscriptions}</div>
             </div>
           </div>
 
           {stats.lowStockProducts && stats.lowStockProducts.length > 0 && (
-            <div className="mt-8 bg-white p-6 rounded-2xl shadow-md">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Low Stock Alerts (≤ 5)</h3>
-              <ul className="space-y-2">
+            <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                  <FaBox className="text-red-600" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-800">Low Stock Alerts (≤ 5)</h3>
+              </div>
+              <div className="space-y-3">
                 {stats.lowStockProducts.slice(0, 6).map((product) => (
-                  <li
+                  <div
                     key={product.id ?? product._id}
-                    className="flex justify-between text-sm sm:text-base text-gray-700 border-b pb-2"
+                    className="flex justify-between items-center p-3 bg-red-50 rounded-lg border border-red-200"
                   >
-                    <span className="font-medium truncate pr-4">{product.product_name}</span>
-                    <span className="text-red-600 font-semibold">
-                      {Number(product.count_in_stock ?? product.countInStock ?? 0)}
+                    <span className="font-medium text-gray-800 truncate pr-4">{product.product_name}</span>
+                    <span className="px-3 py-1 bg-red-600 text-white rounded-full font-bold text-sm">
+                      {Number(product.count_in_stock ?? product.countInStock ?? 0)} left
                     </span>
-                  </li>
+                  </div>
                 ))}
-              </ul>
+              </div>
               {stats.lowStockProducts.length > 6 && (
-                <p className="mt-3 text-sm text-gray-500">
+                <p className="mt-4 text-sm text-gray-600 font-medium">
                   +{stats.lowStockProducts.length - 6} more low-stock products
                 </p>
               )}

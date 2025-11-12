@@ -13,6 +13,7 @@ const Navbar = () => {
   const [showSearch, setShowSearch] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showMobileUserDropdown, setShowMobileUserDropdown] = useState(false);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [firstname, setFirstName] = useState();
   const { cartItems } = useSelector((state) => state.cart);
 
@@ -27,84 +28,90 @@ const Navbar = () => {
     }
   }, [userInfo]);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showUserDropdown && !event.target.closest('.user-dropdown-container')) {
+        setShowUserDropdown(false);
+      }
+    };
+
+    if (showUserDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showUserDropdown]);
+
 
  const handleLogout = async (e) => {
-  console.log('🔴 Step 1: Logout button clicked');
-  console.log('🔴 Event:', e);
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
   
-  e.preventDefault();
-  e.stopPropagation();
-  
-  console.log('🔴 Step 2: Prevented default');
-  
-  // Close dropdowns
-  // setShowUserDropdown(false);
+  // Close dropdowns immediately
+  setShowUserDropdown(false);
   setShowMobileUserDropdown(false);
   setMobileMenuOpen(false);
   
-  console.log('🔴 Step 3: Closed dropdowns');
-  console.log('🔴 Current token:', localStorage.getItem('token'));
-  console.log('🔴 Current userInfo:', localStorage.getItem('userInfo'));
-
   try {
-    console.log('🟡 Step 4: Calling logout API...');
-    
-    const response = await api.post('/api/users/logout');
-    
-    console.log('🟢 Step 5: API Response:', response.data);
-    
-    dispatch(logout());
-    
-    console.log('🟢 Step 6: Dispatched logout');
-    console.log('🟢 Token after logout:', localStorage.getItem('token'));
-    console.log('🟢 UserInfo after logout:', localStorage.getItem('userInfo'));
-    
-    navigate('/');
-    
-    console.log('🟢 Step 7: Navigated to home');
-    
-    toast.success('Logged out successfully');
+    // Try to call logout API
+    await api.post('/api/users/logout');
   } catch (error) {
-    console.error('🔴 Step ERROR:', error);
-    console.error('🔴 Error details:', error.response?.data);
-    
-    dispatch(logout());
-    navigate('/');
-    toast.info('Logged out locally');
+    // Even if API call fails, continue with local logout
+    console.error('Logout API error:', error);
   }
+  
+  // Always dispatch logout to clear local state
+  dispatch(logout());
+  
+  // Clear any remaining localStorage items
+  localStorage.removeItem('userInfo');
+  localStorage.removeItem('token');
+  
+  // Navigate to home
+  navigate('/');
+  
+  // Show success message
+  toast.success('Logged out successfully');
 };
 
   return (
     <>
-      <div className="w-full h-auto shadow-md flex items-center justify-between px-2 sm:px-4 md:px-25">
-        <Link to="/">
+      <div className="w-full h-auto bg-white shadow-lg border-b border-gray-100 flex items-center justify-between px-2 sm:px-4 md:px-6 lg:px-8 xl:px-12 sticky top-0 z-40">
+        <Link to="/" className="flex items-center">
           <img
             src="/logo.png"
             alt="logo"
-            className="w-24 sm:w-28 md:w-32 ml-2 sm:ml-4"
+            className="w-24 sm:w-28 md:w-32 ml-2 sm:ml-4 transition-transform duration-300 hover:scale-105"
           />
         </Link>
         {/* Hamburger for mobile */}
         <button
-          className="md:hidden text-3xl mr-2"
+          className="md:hidden text-3xl mr-2 text-gray-700 hover:text-green-700 transition-colors p-2"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-label="Toggle menu"
         >
           <CiMenuBurger />
         </button>
         {/* Desktop Menu */}
-        <ul className="hidden md:flex gap-6 lg:gap-10">
+        <ul className="hidden md:flex gap-3 lg:gap-6 items-center">
           <Link
             to="/"
             onClick={() => {
               setActive("home");
               setShowSearch(false);
             }}
+            className="transition-colors"
           >
             <li
-              className={`${
+              className={`px-4 py-2.5 rounded-lg transition-all duration-300 text-base lg:text-lg font-medium tracking-wide ${
                 active === "home"
-                  ? "underline underline-offset-4 font-bold text-green-900"
-                  : ""
+                  ? "bg-green-100 text-green-800 font-bold shadow-sm"
+                  : "text-gray-800 hover:text-green-700 hover:bg-green-50"
               }`}
             >
               HOME
@@ -116,12 +123,13 @@ const Navbar = () => {
               setActive("shop");
               setShowSearch(false);
             }}
+            className="transition-colors"
           >
             <li
-              className={`${
+              className={`px-4 py-2.5 rounded-lg transition-all duration-300 text-base lg:text-lg font-medium tracking-wide ${
                 active === "shop"
-                  ? "underline underline-offset-4 font-bold text-green-900"
-                  : ""
+                  ? "bg-green-100 text-green-800 font-bold shadow-sm"
+                  : "text-gray-800 hover:text-green-700 hover:bg-green-50"
               }`}
             >
               SHOP
@@ -133,12 +141,13 @@ const Navbar = () => {
               setActive("subscription");
               setShowSearch(false);
             }}
+            className="transition-colors"
           >
             <li
-              className={`${
+              className={`px-4 py-2.5 rounded-lg transition-all duration-300 text-base lg:text-lg font-medium tracking-wide ${
                 active === "subscription"
-                  ? "underline underline-offset-4 font-bold text-green-900"
-                  : ""
+                  ? "bg-green-100 text-green-800 font-bold shadow-sm"
+                  : "text-gray-800 hover:text-green-700 hover:bg-green-50"
               }`}
             >
               SUBSCRIPTION
@@ -150,12 +159,13 @@ const Navbar = () => {
               setActive("about");
               setShowSearch(false);
             }}
+            className="transition-colors"
           >
             <li
-              className={`${
+              className={`px-4 py-2.5 rounded-lg transition-all duration-300 text-base lg:text-lg font-medium tracking-wide ${
                 active === "about"
-                  ? "underline underline-offset-4 font-bold text-green-900"
-                  : ""
+                  ? "bg-green-100 text-green-800 font-bold shadow-sm"
+                  : "text-gray-800 hover:text-green-700 hover:bg-green-50"
               }`}
             >
               ABOUT US
@@ -167,12 +177,13 @@ const Navbar = () => {
               setActive("contact");
               setShowSearch(false);
             }}
+            className="transition-colors"
           >
             <li
-              className={`${
+              className={`px-4 py-2.5 rounded-lg transition-all duration-300 text-base lg:text-lg font-medium tracking-wide ${
                 active === "contact"
-                  ? "underline underline-offset-4 font-bold text-green-900"
-                  : ""
+                  ? "bg-green-100 text-green-800 font-bold shadow-sm"
+                  : "text-gray-800 hover:text-green-700 hover:bg-green-50"
               }`}
             >
               CONTACT US
@@ -180,114 +191,153 @@ const Navbar = () => {
           </Link>
         </ul>
         {/* Desktop Icons */}
-        <div className="hidden md:flex gap-6 text-2xl lg:text-3xl mr-2 sm:mr-4">
+        <div className="hidden md:flex gap-5 lg:gap-7 text-2xl lg:text-3xl xl:text-4xl mr-2 sm:mr-4 items-center">
           {/* Search Icon */}
           <CiSearch
-            className="cursor-pointer"
+            className="cursor-pointer text-gray-700 hover:text-green-700 transition-colors duration-300 hover:scale-110"
             onClick={() => setShowSearch((prev) => !prev)}
             title="Search"
           />
           {/* User Dropdown */}
           {userInfo ? (
-            <div className="group relative inline-block">
-              <CiUser className="cursor-pointer" />
-              <div className="absolute top-5 right-0 mt-2 hidden w-40 rounded-md bg-white shadow-lg group-hover:block z-50">
-                <ul className="py-1 text-lg text-gray-700">
-                  <p className="block px-4 py-2">Hello, {firstname}</p>
-                  {userInfo.isAdmin ? (
-                    <>
-                      <li>
-                        <Link
-                          to="/admin/orderlist"
-                          className="block px-4 py-2 hover:bg-gray-100"
-                          onClick={() => setActive("")}
-                        >
-                          Orders
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          to="/admin/subscriptionlist"
-                          className="block px-4 py-2 hover:bg-gray-100"
-                          onClick={() => setActive("")}
-                        >
-                          Subscription
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          to="/admin/productlist"
-                          className="block px-4 py-2 hover:bg-gray-100"
-                          onClick={() => setActive("")}
-                        >
-                          Products
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          to="/admin/userlist"
-                          className="block px-4 py-2 hover:bg-gray-100"
-                          onClick={() => setActive("")}
-                        >
-                          Users
-                        </Link>
-                      </li>
-                    </>
-                  ) : (
-                    <></>
-                  )}
-                  <li>
-                    <Link
-                      to="/profile"
-                      className="block px-4 py-2 hover:bg-gray-100"
-                      onClick={() => setActive("")}
-                    >
-                      Profile
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="#"
-                      className="block px-4 py-2 hover:bg-gray-100"
-                      onClick={handleLogout}
-                    >
-                      Logout
-                    </Link>
-                  </li>
-                </ul>
-              </div>
+            <div className="relative inline-block user-dropdown-container">
+              <CiUser 
+                className="cursor-pointer text-gray-700 hover:text-green-700 transition-colors duration-300 hover:scale-110" 
+                onClick={() => setShowUserDropdown(!showUserDropdown)}
+              />
+              {showUserDropdown && (
+                <div className="absolute top-8 right-0 mt-2 w-52 rounded-lg bg-white shadow-xl border border-gray-100 z-50 overflow-hidden">
+                  <div className="bg-gradient-to-r from-green-50 to-green-100 px-5 py-3.5 border-b border-gray-200">
+                    <p className="text-base font-bold text-green-800">Hello, {firstname}</p>
+                  </div>
+                  <ul className="py-2">
+                    {userInfo.isAdmin ? (
+                      <>
+                        <li>
+                          <Link
+                            to="/admin/orderlist"
+                            className="block px-5 py-2.5 text-base text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors font-medium"
+                            onClick={() => {
+                              setActive("");
+                              setShowUserDropdown(false);
+                            }}
+                          >
+                            Orders
+                          </Link>
+                        </li>
+                        <li>
+                          <Link
+                            to="/admin/subscriptionlist"
+                            className="block px-5 py-2.5 text-base text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors font-medium"
+                            onClick={() => {
+                              setActive("");
+                              setShowUserDropdown(false);
+                            }}
+                          >
+                            Subscription
+                          </Link>
+                        </li>
+                        <li>
+                          <Link
+                            to="/admin/productlist"
+                            className="block px-5 py-2.5 text-base text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors font-medium"
+                            onClick={() => {
+                              setActive("");
+                              setShowUserDropdown(false);
+                            }}
+                          >
+                            Products
+                          </Link>
+                        </li>
+                        <li>
+                          <Link
+                            to="/admin/userlist"
+                            className="block px-5 py-2.5 text-base text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors font-medium"
+                            onClick={() => {
+                              setActive("");
+                              setShowUserDropdown(false);
+                            }}
+                          >
+                            Users
+                          </Link>
+                        </li>
+                        <li className="border-t border-gray-200 my-1"></li>
+                      </>
+                    ) : (
+                      <></>
+                    )}
+                    <li>
+                      <Link
+                        to="/profile"
+                        className="block px-5 py-2.5 text-base text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors font-medium"
+                        onClick={() => {
+                          setActive("");
+                          setShowUserDropdown(false);
+                        }}
+                      >
+                        Profile
+                      </Link>
+                    </li>
+                    <li className="border-t border-gray-200 my-1"></li>
+                    <li>
+                      <button
+                        type="button"
+                        className="w-full text-left block px-5 py-2.5 text-base text-red-600 hover:bg-red-50 transition-colors font-medium"
+                        onClick={handleLogout}
+                      >
+                        Logout
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+              )}
             </div>
           ) : (
-            <div className="group relative inline-block">
-              <CiUser className="cursor-pointer" />
-              <div className="absolute top-5 right-0 mt-2 hidden w-40 rounded-md bg-white shadow-lg group-hover:block z-50">
-                <ul className="py-1 text-lg text-gray-700">
-                  <li>
-                    <Link
-                      to="/login"
-                      className="block px-4 py-2 hover:bg-gray-100"
-                      onClick={() => setActive("")}
-                    >
-                      Login
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/register"
-                      className="block px-4 py-2 hover:bg-gray-100"
-                      onClick={() => setActive("")}
-                    >
-                      Register
-                    </Link>
-                  </li>
-                </ul>
-              </div>
+            <div className="relative inline-block user-dropdown-container">
+              <CiUser 
+                className="cursor-pointer text-gray-700 hover:text-green-700 transition-colors duration-300 hover:scale-110" 
+                onClick={() => setShowUserDropdown(!showUserDropdown)}
+              />
+              {showUserDropdown && (
+                <div className="absolute top-8 right-0 mt-2 w-44 rounded-lg bg-white shadow-xl border border-gray-100 z-50 overflow-hidden">
+                  <ul className="py-2">
+                    <li>
+                      <Link
+                        to="/login"
+                        className="block px-5 py-3 text-base text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors font-semibold"
+                        onClick={() => {
+                          setActive("");
+                          setShowUserDropdown(false);
+                        }}
+                      >
+                        Login
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/register"
+                        className="block px-5 py-3 text-base text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors font-semibold"
+                        onClick={() => {
+                          setActive("");
+                          setShowUserDropdown(false);
+                        }}
+                      >
+                        Register
+                      </Link>
+                    </li>
+                  </ul>
+                </div>
+              )}
             </div>
           )}
-          <Link to="/cart" onClick={() => setActive("")} className="relative">
+          <Link 
+            to="/cart" 
+            onClick={() => setActive("")} 
+            className="relative text-gray-700 hover:text-green-700 transition-colors duration-300 hover:scale-110"
+          >
             <CiShoppingCart />
             {cartItems.length > 0 && (
-              <span className="absolute top-[-8px] right-[-8px] bg-red-600 text-white text-sm px-2 rounded-full">
+              <span className="absolute top-[-8px] right-[-8px] bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-lg animate-pulse">
                 {cartItems.reduce((a, c) => a + c.quantity, 0)}
               </span>
             )}
@@ -295,8 +345,8 @@ const Navbar = () => {
         </div>
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="absolute top-16 left-0 w-full bg-white shadow-md z-50 md:hidden animate-fade-in">
-            <ul className="flex flex-col gap-4 p-4">
+          <div className="absolute top-full left-0 w-full bg-white shadow-xl border-b border-gray-200 z-50 md:hidden">
+            <ul className="flex flex-col gap-2 p-5">
               <Link
                 to="/"
                 onClick={() => {
@@ -307,10 +357,10 @@ const Navbar = () => {
                 }}
               >
                 <li
-                  className={`${
+                  className={`px-5 py-3.5 rounded-lg transition-all duration-300 text-lg font-medium tracking-wide ${
                     active === "home"
-                      ? "underline underline-offset-4 font-bold text-green-900"
-                      : ""
+                      ? "bg-green-100 text-green-800 font-bold shadow-sm"
+                      : "text-gray-800 hover:bg-green-50 hover:text-green-700"
                   }`}
                 >
                   HOME
@@ -326,10 +376,10 @@ const Navbar = () => {
                 }}
               >
                 <li
-                  className={`${
+                  className={`px-5 py-3.5 rounded-lg transition-all duration-300 text-lg font-medium tracking-wide ${
                     active === "shop"
-                      ? "underline underline-offset-4 font-bold text-green-900"
-                      : ""
+                      ? "bg-green-100 text-green-800 font-bold shadow-sm"
+                      : "text-gray-800 hover:bg-green-50 hover:text-green-700"
                   }`}
                 >
                   SHOP
@@ -345,10 +395,10 @@ const Navbar = () => {
                 }}
               >
                 <li
-                  className={`${
+                  className={`px-5 py-3.5 rounded-lg transition-all duration-300 text-lg font-medium tracking-wide ${
                     active === "subscription"
-                      ? "underline underline-offset-4 font-bold text-green-900"
-                      : ""
+                      ? "bg-green-100 text-green-800 font-bold shadow-sm"
+                      : "text-gray-800 hover:bg-green-50 hover:text-green-700"
                   }`}
                 >
                   SUBSCRIPTION
@@ -364,10 +414,10 @@ const Navbar = () => {
                 }}
               >
                 <li
-                  className={`${
+                  className={`px-5 py-3.5 rounded-lg transition-all duration-300 text-lg font-medium tracking-wide ${
                     active === "about"
-                      ? "underline underline-offset-4 font-bold text-green-900"
-                      : ""
+                      ? "bg-green-100 text-green-800 font-bold shadow-sm"
+                      : "text-gray-800 hover:bg-green-50 hover:text-green-700"
                   }`}
                 >
                   ABOUT US
@@ -383,18 +433,18 @@ const Navbar = () => {
                 }}
               >
                 <li
-                  className={`${
+                  className={`px-5 py-3.5 rounded-lg transition-all duration-300 text-lg font-medium tracking-wide ${
                     active === "contact"
-                      ? "underline underline-offset-4 font-bold text-green-900"
-                      : ""
+                      ? "bg-green-100 text-green-800 font-bold shadow-sm"
+                      : "text-gray-800 hover:bg-green-50 hover:text-green-700"
                   }`}
                 >
                   CONTACT US
                 </li>
               </Link>
-              <li className="flex gap-4 items-center mt-2">
+              <li className="flex gap-4 items-center mt-2 pt-4 border-t border-gray-200">
                 <CiSearch
-                  className="cursor-pointer text-2xl"
+                  className="cursor-pointer text-2xl text-gray-700 hover:text-green-700 transition-colors"
                   onClick={() => {
                     setShowSearch((prev) => !prev);
                     setMobileMenuOpen(false);
@@ -410,34 +460,34 @@ const Navbar = () => {
                     setShowMobileUserDropdown(false);
                     setShowSearch(false);
                   }}
-                  className="relative"
+                  className="relative text-gray-700 hover:text-green-700 transition-colors"
                 >
                   <CiShoppingCart className="text-2xl" />
                   {cartItems.length > 0 && (
-                    <span className="absolute top-[-8px] right-[-8px] bg-red-600 text-white text-xs px-1 rounded-full">
+                    <span className="absolute top-[-8px] right-[-8px] bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full shadow-lg">
                       {cartItems.reduce((a, c) => a + c.quantity, 0)}
                     </span>
                   )}
                 </Link>
                 <div className="relative">
                   <CiUser
-                    className="cursor-pointer text-2xl"
+                    className="cursor-pointer text-2xl text-gray-700 hover:text-green-700 transition-colors"
                     onClick={() => setShowMobileUserDropdown((prev) => !prev)}
                   />
                   {showMobileUserDropdown && (
-                    <div className="absolute left-0 mt-2 w-40 rounded-md bg-white shadow-lg z-50">
-                      <ul className="py-1 text-base text-gray-700">
-                        {userInfo ? (
-                          <>
-                            <p className="block px-4 py-2">
-                              Hello, {firstname}
-                            </p>
+                    <div className="absolute left-0 mt-2 w-52 rounded-lg bg-white shadow-xl border border-gray-100 z-50 overflow-hidden">
+                      {userInfo ? (
+                        <>
+                          <div className="bg-gradient-to-r from-green-50 to-green-100 px-5 py-3.5 border-b border-gray-200">
+                            <p className="text-base font-bold text-green-800">Hello, {firstname}</p>
+                          </div>
+                          <ul className="py-2">
                             {userInfo.isAdmin && (
                               <>
                                 <li>
                                   <Link
                                     to="/admin/orderlist"
-                                    className="block px-4 py-2 hover:bg-gray-100"
+                                    className="block px-5 py-2.5 text-base text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors font-medium"
                                     onClick={() => {
                                       setActive("");
                                       setShowMobileUserDropdown(false);
@@ -449,7 +499,7 @@ const Navbar = () => {
                                 <li>
                                   <Link
                                     to="/admin/subscriptionlist"
-                                    className="block px-4 py-2 hover:bg-gray-100"
+                                    className="block px-5 py-2.5 text-base text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors font-medium"
                                     onClick={() => {
                                       setActive("");
                                       setShowMobileUserDropdown(false);
@@ -461,7 +511,7 @@ const Navbar = () => {
                                 <li>
                                   <Link
                                     to="/admin/productlist"
-                                    className="block px-4 py-2 hover:bg-gray-100"
+                                    className="block px-5 py-2.5 text-base text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors font-medium"
                                     onClick={() => {
                                       setActive("");
                                       setShowMobileUserDropdown(false);
@@ -473,7 +523,7 @@ const Navbar = () => {
                                 <li>
                                   <Link
                                     to="/admin/userlist"
-                                    className="block px-4 py-2 hover:bg-gray-100"
+                                    className="block px-5 py-2.5 text-base text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors font-medium"
                                     onClick={() => {
                                       setActive("");
                                       setShowMobileUserDropdown(false);
@@ -482,12 +532,13 @@ const Navbar = () => {
                                     Users
                                   </Link>
                                 </li>
+                                <li className="border-t border-gray-200 my-1"></li>
                               </>
                             )}
                             <li>
                               <Link
                                 to="/profile"
-                                className="block px-4 py-2 hover:bg-gray-100"
+                                className="block px-5 py-2.5 text-base text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors font-medium"
                                 onClick={() => {
                                   setActive("");
                                   setShowMobileUserDropdown(false);
@@ -496,49 +547,46 @@ const Navbar = () => {
                                 Profile
                               </Link>
                             </li>
+                            <li className="border-t border-gray-200 my-1"></li>
                             <li>
-                              <Link
-                                to="#"
-                                className="block px-4 py-2 hover:bg-gray-100"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  handleLogout();
-                                  setShowMobileUserDropdown(false);
-                                }}
+                              <button
+                                type="button"
+                                className="w-full text-left block px-5 py-2.5 text-base text-red-600 hover:bg-red-50 transition-colors font-medium"
+                                onClick={handleLogout}
                               >
                                 Logout
-                              </Link>
+                              </button>
                             </li>
-                          </>
-                        ) : (
-                          <>
-                            <li>
-                              <Link
-                                to="/login"
-                                className="block px-4 py-2 hover:bg-gray-100"
-                                onClick={() => {
-                                  setActive("");
-                                  setShowMobileUserDropdown(false);
-                                }}
-                              >
-                                Login
-                              </Link>
-                            </li>
-                            <li>
-                              <Link
-                                to="/register"
-                                className="block px-4 py-2 hover:bg-gray-100"
-                                onClick={() => {
-                                  setActive("");
-                                  setShowMobileUserDropdown(false);
-                                }}
-                              >
-                                Register
-                              </Link>
-                            </li>
-                          </>
-                        )}
-                      </ul>
+                          </ul>
+                        </>
+                      ) : (
+                        <ul className="py-2">
+                          <li>
+                            <Link
+                              to="/login"
+                              className="block px-5 py-3 text-base text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors font-semibold"
+                              onClick={() => {
+                                setActive("");
+                                setShowMobileUserDropdown(false);
+                              }}
+                            >
+                              Login
+                            </Link>
+                          </li>
+                          <li>
+                            <Link
+                              to="/register"
+                              className="block px-5 py-3 text-base text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors font-semibold"
+                              onClick={() => {
+                                setActive("");
+                                setShowMobileUserDropdown(false);
+                              }}
+                            >
+                              Register
+                            </Link>
+                          </li>
+                        </ul>
+                      )}
                     </div>
                   )}
                 </div>
@@ -548,8 +596,8 @@ const Navbar = () => {
         )}
       </div>
       {showSearch && (
-        <div className="w-full flex justify-center p-4 bg-gray-100 shadow-md">
-          <div className="max-w-2xl">
+        <div className="w-full flex justify-center p-4 bg-gradient-to-r from-gray-50 to-gray-100 shadow-md border-b border-gray-200">
+          <div className="max-w-2xl w-full">
             <SearchBox />
           </div>
         </div>
