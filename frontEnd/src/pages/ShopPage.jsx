@@ -4,7 +4,7 @@ import ProductCard from "../components/ProductCard";
 import { useParams } from "react-router-dom";
 import { useGetProductsQuery } from "../slices/productApiSlice";
 import Paginate from "../components/Paginate.jsx";
-import { FaFilter, FaTimes, FaSpinner } from "react-icons/fa";
+import { FaFilter, FaTimes, FaSpinner, FaSort } from "react-icons/fa";
 
 const ShopPage = (props) => {
   const { pageNumber, keyword } = useParams();
@@ -46,6 +46,7 @@ const ShopPage = (props) => {
   const [maxPrice, setMaxPrice] = useState(priceStats.max);
   const [minRating, setMinRating] = useState(0);
   const [inStockOnly, setInStockOnly] = useState(false);
+  const [sortBy, setSortBy] = useState("default");
 
   useEffect(() => {
     setMinPrice(priceStats.min);
@@ -53,7 +54,7 @@ const ShopPage = (props) => {
   }, [priceStats.min, priceStats.max]);
 
   const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
+    let filtered = products.filter((product) => {
       const categoryPass =
         selectedCategory === "all" || product.category === selectedCategory;
 
@@ -75,6 +76,42 @@ const ShopPage = (props) => {
 
       return categoryPass && pricePass && ratingPass && stockPass;
     });
+
+    // Apply sorting
+    const sorted = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case "price-low":
+          const aPrice = Number(a.min_price ?? a.price ?? 0);
+          const bPrice = Number(b.min_price ?? b.price ?? 0);
+          return aPrice - bPrice;
+        
+        case "price-high":
+          const aPriceHigh = Number(a.max_price ?? a.min_price ?? a.price ?? 0);
+          const bPriceHigh = Number(b.max_price ?? b.min_price ?? b.price ?? 0);
+          return bPriceHigh - aPriceHigh;
+        
+        case "rating":
+          const aRating = Number(a.rating ?? 0);
+          const bRating = Number(b.rating ?? 0);
+          return bRating - aRating;
+        
+        case "name-asc":
+          return (a.product_name || '').localeCompare(b.product_name || '');
+        
+        case "name-desc":
+          return (b.product_name || '').localeCompare(a.product_name || '');
+        
+        case "newest":
+          const aDate = new Date(a.created_at ?? a.createdAt ?? 0);
+          const bDate = new Date(b.created_at ?? b.createdAt ?? 0);
+          return bDate - aDate;
+        
+        default:
+          return 0; // Keep original order
+      }
+    });
+
+    return sorted;
   }, [
     products,
     selectedCategory,
@@ -82,6 +119,7 @@ const ShopPage = (props) => {
     maxPrice,
     minRating,
     inStockOnly,
+    sortBy,
     priceStats.min,
     priceStats.max,
   ]);
@@ -92,6 +130,7 @@ const ShopPage = (props) => {
     setMaxPrice(priceStats.max);
     setMinRating(0);
     setInStockOnly(false);
+    setSortBy("default");
   };
 
   return (
@@ -243,11 +282,31 @@ const ShopPage = (props) => {
             <div className="flex-1">
               {filteredProducts.length > 0 ? (
                 <>
-                  <div className="mb-6 flex items-center justify-between">
+                  <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">
                       Our Products
                       <span className="text-green-700 ml-2">({filteredProducts.length})</span>
                     </h2>
+                    <div className="flex items-center gap-3">
+                      <FaSort className="text-green-700" />
+                      <label htmlFor="sort" className="text-sm font-semibold text-gray-700 whitespace-nowrap">
+                        Sort by:
+                      </label>
+                      <select
+                        id="sort"
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value)}
+                        className="border border-gray-300 rounded-lg px-4 py-2.5 text-sm bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all hover:border-green-300 min-w-[180px]"
+                      >
+                        <option value="default">Default</option>
+                        <option value="newest">Newest First</option>
+                        <option value="price-low">Price: Low to High</option>
+                        <option value="price-high">Price: High to Low</option>
+                        <option value="rating">Rating: High to Low</option>
+                        <option value="name-asc">Name: A to Z</option>
+                        <option value="name-desc">Name: Z to A</option>
+                      </select>
+                    </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
                     {filteredProducts.map((product) => (

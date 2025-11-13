@@ -282,6 +282,7 @@ const [activeReviewFilters, setActiveReviewFilters] = useState({
 													<div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
 														<label className="text-base sm:text-lg font-semibold text-gray-700 min-w-[80px]">Size:</label>
 														<select
+															value={size}
 															onChange={(e) => setSize(e.target.value)}
 															className="w-full sm:w-64 p-3 border border-gray-300 rounded-lg text-base bg-gray-50 hover:bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
 														>
@@ -293,6 +294,7 @@ const [activeReviewFilters, setActiveReviewFilters] = useState({
 														<div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
 															<label className="text-base sm:text-lg font-semibold text-gray-700 min-w-[80px]">Roast:</label>
 															<select 
+																value={roast}
 																onChange={(e) => setRoast(e.target.value)} 
 																className="w-full sm:w-64 p-3 border border-gray-300 rounded-lg text-base bg-gray-50 hover:bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
 															>
@@ -304,6 +306,7 @@ const [activeReviewFilters, setActiveReviewFilters] = useState({
 													<div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
 														<label className="text-base sm:text-lg font-semibold text-gray-700 min-w-[80px]">Grind:</label>
 														<select 
+															value={grind}
 															onChange={(e) => setGrind(e.target.value)} 
 															className="w-full sm:w-64 p-3 border border-gray-300 rounded-lg text-base bg-gray-50 hover:bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
 														>

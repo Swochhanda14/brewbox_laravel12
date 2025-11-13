@@ -5,9 +5,10 @@ import { toast } from 'react-toastify';
 import {
   useDeliverOrderMutation,
   useGetOrderDetailsQuery,
+  useCancelOrderMutation,
 } from '../slices/ordersApiSlice';
 import { BASE_URL } from '../constants';
-import { FaSpinner, FaCheckCircle, FaTimes, FaTruck, FaCreditCard, FaShoppingBag, FaMapMarkerAlt, FaEnvelope, FaPhone, FaUser } from 'react-icons/fa';
+import { FaSpinner, FaCheckCircle, FaTimes, FaTruck, FaCreditCard, FaShoppingBag, FaMapMarkerAlt, FaEnvelope, FaPhone, FaUser, FaBan } from 'react-icons/fa';
 
 const OrderPage = () => {
   const { id: orderId } = useParams();
@@ -21,13 +22,35 @@ const OrderPage = () => {
   console.log(order)
 
   const [deliverOrder, { isLoading: loadingDeliver }] = useDeliverOrderMutation();
+  const [cancelOrder, { isLoading: loadingCancel }] = useCancelOrderMutation();
   const { userInfo } = useSelector((state) => state.auth);
-  // console.log(userInfo)
+  
+  const isAdmin = userInfo?.isAdmin;
+  const isOwner = order?.user_id === userInfo?._id || order?.user?.id === userInfo?._id;
+  const canCancel = isOwner && !(order?.is_delivered ?? order?.isDelivered) && order?.status !== 'cancelled';
 
   const deliverHandler = async () => {
-    await deliverOrder(orderId);
-    refetch();
-    toast.success('Order marked as delivered');
+    try {
+      await deliverOrder(orderId).unwrap();
+      refetch();
+      toast.success('Order marked as delivered');
+    } catch (err) {
+      toast.error(err?.data?.message || 'Failed to mark order as delivered');
+    }
+  };
+
+  const cancelHandler = async () => {
+    if (!window.confirm('Are you sure you want to cancel this order? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      await cancelOrder(orderId).unwrap();
+      refetch();
+      toast.success('Order cancelled successfully');
+    } catch (err) {
+      toast.error(err?.data?.message || 'Failed to cancel order');
+    }
   };
 
   return (
@@ -156,7 +179,16 @@ const OrderPage = () => {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {(order.orderItems ?? order.order_items).map((item, index) => (
+                    {(order.orderItems ?? order.order_items).map((item, index) => {
+                      // Debug: Check what values we're receiving
+                      console.log('Order item:', {
+                        name: item.name,
+                        size: item.size,
+                        grind: item.grind,
+                        sizeType: typeof item.size,
+                        grindType: typeof item.grind,
+                      });
+                      return (
                       <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                         <Link to={`/product/${(item.product?.id ?? item.product?._id ?? item.product)}`} className="flex-shrink-0">
                           <img
@@ -173,12 +205,33 @@ const OrderPage = () => {
                             {item.name}
                           </Link>
                           <div className="text-sm text-gray-600 space-y-1">
-                            {item.product?.category === 'Subscription' && (
+                            {item.product?.category === 'Subscription' && item.roast && (
                               <span className="inline-block px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-semibold mr-2">
                                 Roast: {item.roast}
                               </span>
                             )}
-                            <span className="capitalize">Size: {item.size}, Grind: {item.grind}</span>
+                            <span className="capitalize">
+                              {(() => {
+                                // Get and validate size
+                                const size = item.size ? String(item.size).trim() : '';
+                                const hasSize = size !== '' && size !== 'N/A' && size !== 'null' && size !== 'undefined';
+                                
+                                // Get and validate grind
+                                const grind = item.grind ? String(item.grind).trim() : '';
+                                const hasGrind = grind !== '' && grind !== 'N/A' && grind !== 'null' && grind !== 'undefined';
+                                
+                                // Build display string only if we have valid values
+                                if (hasSize && hasGrind) {
+                                  return `Size: ${size}, Grind: ${grind}`;
+                                } else if (hasSize) {
+                                  return `Size: ${size}`;
+                                } else if (hasGrind) {
+                                  return `Grind: ${grind}`;
+                                } else {
+                                  return 'No customization';
+                                }
+                              })()}
+                            </span>
                           </div>
                         </div>
                         <div className="text-right">
@@ -190,7 +243,8 @@ const OrderPage = () => {
                           </p>
                         </div>
                       </div>
-                    ))}
+                    );
+                    })}
                   </div>
                 )}
               </div>
@@ -221,6 +275,33 @@ const OrderPage = () => {
                   </div>
                 </div>
 
+                {/* Cancel Order Button (User) */}
+                {canCancel && (
+                  <>
+                    {loadingCancel && (
+                      <div className="flex items-center justify-center gap-2 text-red-700 mb-4">
+                        <FaSpinner className="animate-spin" />
+                        <span>Cancelling...</span>
+                      </div>
+                    )}
+                    <button
+                      onClick={cancelHandler}
+                      disabled={loadingCancel}
+                      className="w-full py-3 px-6 bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-300 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none mb-3 flex items-center justify-center gap-2"
+                    >
+                      <FaBan />
+                      Cancel Order
+                    </button>
+                  </>
+                )}
+
+                {/* Order Status */}
+                {order?.status === 'cancelled' && (
+                  <div className="w-full py-3 px-6 bg-red-50 border border-red-200 text-red-800 font-semibold rounded-lg text-center mb-3">
+                    Order Cancelled
+                  </div>
+                )}
+
                 {/* Admin: Mark as Delivered */}
                 {loadingDeliver && (
                   <div className="flex items-center justify-center gap-2 text-green-700 mb-4">
@@ -228,7 +309,7 @@ const OrderPage = () => {
                     <span>Updating...</span>
                   </div>
                 )}
-                {userInfo && userInfo.isAdmin && !(order.is_delivered ?? order.isDelivered) && (
+                {userInfo && userInfo.isAdmin && !(order.is_delivered ?? order.isDelivered) && order?.status !== 'cancelled' && (
                   <button
                     onClick={deliverHandler}
                     disabled={loadingDeliver}

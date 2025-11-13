@@ -10,7 +10,15 @@ const ProductCard = ({ product }) => {
 	const [selectedImage, setSelectedImage] = useState();
 	const price = product.min_price;
 	const addToCartHandler = () => {
-		dispatch(addToCart({ ...product, quantity, price }));
+		// Add default size and grind when adding from product card
+		dispatch(addToCart({ 
+			...product, 
+			quantity, 
+			price,
+			size: "250", // Default size
+			grind: "whole beans", // Default grind
+			roast: product.category === "Subscription" ? "medium" : null, // Default roast for subscriptions
+		}));
 		// navigate('/cart')
 	};
 	const dispatch = useDispatch();

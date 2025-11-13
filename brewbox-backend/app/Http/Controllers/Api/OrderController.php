@@ -8,6 +8,10 @@ use App\Models\OrderItem;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\OrderConfirmationMail;
+use App\Mail\OrderStatusUpdateMail;
 
 class OrderController extends Controller
 {
@@ -36,6 +40,7 @@ class OrderController extends Controller
                 'shipping_price' => $request->shippingPrice,
                 'tax_price' => $request->taxPrice,
                 'total_price' => $request->totalPrice,
+                'status' => 'pending',
             ]);
 
             // Create order items and update stock
@@ -43,15 +48,25 @@ class OrderController extends Controller
                 $productId = $item['product'] ?? $item['_id'];
                 $product = Product::findOrFail($productId);
 
+                // Get size and grind, default to 'N/A' only if empty or not provided
+                // Handle empty strings, null, undefined, and whitespace-only strings
+                $sizeValue = isset($item['size']) ? trim((string)$item['size']) : '';
+                $grindValue = isset($item['grind']) ? trim((string)$item['grind']) : '';
+                $roastValue = isset($item['roast']) ? trim((string)$item['roast']) : '';
+
+                $size = ($sizeValue !== '' && $sizeValue !== 'N/A') ? $sizeValue : 'N/A';
+                $grind = ($grindValue !== '' && $grindValue !== 'N/A') ? $grindValue : 'N/A';
+                $roast = ($roastValue !== '') ? $roastValue : null;
+
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $product->id,
                     'name' => $product->product_name,
                     'qty' => $item['qty'] ?? $item['quantity'],
                     'image' => is_array($product->image) ? $product->image[0] : $product->image,
-                    'size' => $item['size'] ?? 'N/A',
-                    'grind' => $item['grind'] ?? 'N/A',
-                    'roast' => $item['roast'] ?? null,
+                    'size' => $size,
+                    'grind' => $grind,
+                    'roast' => $roast,
                     'price' => $item['price'],
                 ]);
 
@@ -60,6 +75,17 @@ class OrderController extends Controller
             }
 
             DB::commit();
+
+            // Send order confirmation email
+            try {
+                $order->load(['user', 'orderItems']);
+                if ($order->user && $order->user->email) {
+                    Mail::to($order->user->email)->send(new OrderConfirmationMail($order));
+                }
+            } catch (\Exception $e) {
+                Log::error('Order confirmation email failed: ' . $e->getMessage());
+                // Don't fail the request if email fails
+            }
 
             return response()->json($order->load('orderItems'), 201);
         } catch (\Exception $e) {
@@ -104,6 +130,16 @@ class OrderController extends Controller
             $order->is_delivered = true;
             $order->delivered_at = now();
             $order->save();
+
+            // Send status update email
+            try {
+                $order->load('user');
+                if ($order->user && $order->user->email) {
+                    Mail::to($order->user->email)->send(new OrderStatusUpdateMail($order, 'delivered'));
+                }
+            } catch (\Exception $e) {
+                Log::error('Order status update email failed: ' . $e->getMessage());
+            }
 
             return response()->json($order);
         }
@@ -153,5 +189,70 @@ class OrderController extends Controller
         ])->get();
 
         return response()->json($orders);
+    }
+
+    // Cancel order
+    public function cancel(Request $request, $id)
+    {
+        $order = Order::with('orderItems.product')->findOrFail($id);
+
+        // Check if user owns the order or is admin
+        if ($order->user_id !== $request->user()->id && !$request->user()->is_admin) {
+            return response()->json([
+                'message' => 'Unauthorized'
+            ], 403);
+        }
+
+        // Check if order can be cancelled (not delivered)
+        if ($order->is_delivered) {
+            return response()->json([
+                'message' => 'Cannot cancel a delivered order'
+            ], 400);
+        }
+
+        // Check if already cancelled
+        if ($order->status === 'cancelled') {
+            return response()->json([
+                'message' => 'Order is already cancelled'
+            ], 400);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            // Restore stock
+            foreach ($order->orderItems as $item) {
+                if ($item->product) {
+                    $item->product->increment('count_in_stock', $item->qty);
+                }
+            }
+
+            // Update order status
+            $order->status = 'cancelled';
+            $order->cancelled_at = now();
+            $order->save();
+
+            DB::commit();
+
+            // Send cancellation email
+            try {
+                $order->load('user');
+                if ($order->user && $order->user->email) {
+                    Mail::to($order->user->email)->send(new OrderStatusUpdateMail($order, 'cancelled'));
+                }
+            } catch (\Exception $e) {
+                Log::error('Order cancellation email failed: ' . $e->getMessage());
+            }
+
+            return response()->json([
+                'message' => 'Order cancelled successfully',
+                'order' => $order,
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Failed to cancel order: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

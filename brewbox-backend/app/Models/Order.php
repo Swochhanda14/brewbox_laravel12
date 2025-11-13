@@ -20,6 +20,8 @@ class Order extends Model
         'paid_at',
         'is_delivered',
         'delivered_at',
+        'status',
+        'cancelled_at',
     ];
 
     protected $casts = [
@@ -33,6 +35,7 @@ class Order extends Model
         'is_delivered' => 'boolean',
         'paid_at' => 'datetime',
         'delivered_at' => 'datetime',
+        'cancelled_at' => 'datetime',
     ];
 
     // Relationships

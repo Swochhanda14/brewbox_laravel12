@@ -24,6 +24,17 @@ class OrderItem extends Model
         'price' => 'decimal:2',
     ];
 
+    // Accessor to normalize empty strings to 'N/A' for size and grind
+    public function getSizeAttribute($value)
+    {
+        return ($value === '' || $value === null) ? 'N/A' : $value;
+    }
+
+    public function getGrindAttribute($value)
+    {
+        return ($value === '' || $value === null) ? 'N/A' : $value;
+    }
+
     // Relationships
     public function order()
     {

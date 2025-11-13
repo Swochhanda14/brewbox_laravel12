@@ -97,16 +97,23 @@ const PlaceOrderScreen = () => {
     // Normal order process
     try {
       const res = await createOrder({
-        orderItems: cart.cartItems.map(item => ({
-          name: item.product_name,
-          qty: item.quantity,
-          size: item.size,
-          grind: item.grind,
-          roast: item.roast,
-          image: item.image[0],
-          price: item.price,
-          product: item._id,
-        })),
+        orderItems: cart.cartItems.map(item => {
+          // Ensure size and grind have valid values, default to 'N/A' if empty or missing
+          const size = (item.size && item.size.trim && item.size.trim() !== '') ? item.size.trim() : 'N/A';
+          const grind = (item.grind && item.grind.trim && item.grind.trim() !== '') ? item.grind.trim() : 'N/A';
+          const roast = (item.roast && item.roast.trim && item.roast.trim() !== '') ? item.roast.trim() : null;
+          
+          return {
+            name: item.product_name,
+            qty: item.quantity,
+            size: size,
+            grind: grind,
+            roast: roast,
+            image: item.image[0],
+            price: item.price,
+            product: item._id,
+          };
+        }),
         shippingAddress: cart.shippingAddress,
         paymentMethod: cart.paymentMethod,
         itemsPrice: Number(itemsPrice),

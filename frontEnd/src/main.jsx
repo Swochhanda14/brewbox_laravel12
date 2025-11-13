@@ -32,6 +32,8 @@ import AdminUserList from './pages/admin/AdminUserList.jsx'
 import AdminUpdateUser from './pages/admin/AdminUpdateUser.jsx'
 import AdminDashboard from './pages/admin/AdminDashboard.jsx'
 import AdminLayout from './layouts/AdminLayout.jsx'
+import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx'
+import ResetPasswordPage from './pages/ResetPasswordPage.jsx'
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -50,6 +52,8 @@ const router = createBrowserRouter(
         <Route path='/cart' element={<CartPage title="Your Cart" />} />
         <Route path='/login' element={<LoginPage title="Login" />} />
         <Route path='/register' element={<RegisterPage title="Sign Up" />} />
+        <Route path='/forgot-password' element={<ForgotPasswordPage />} />
+        <Route path='/reset-password' element={<ResetPasswordPage />} />
         <Route path='/product/:id' element={<ProductDetails />} />
         
         <Route path='' element={<PrivateRoute />}>

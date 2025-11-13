@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\UploadController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\ContactController;
 
 // Test route
 Route::get('/test', function() {
@@ -39,6 +40,9 @@ Route::get('/test', function() {
 // Public routes
 Route::post('/users/login', [AuthController::class, 'login']);
 Route::post('/users', [AuthController::class, 'register']);
+Route::post('/users/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/users/reset-password', [AuthController::class, 'resetPassword']);
+Route::post('/contact', [ContactController::class, 'store']);
 
 // Products (public)
 Route::get('/products', [ProductController::class, 'index']);
@@ -61,6 +65,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/orders', [OrderController::class, 'store']);
     Route::get('/orders/mine', [OrderController::class, 'getMyOrders']);
     Route::get('/orders/{id}', [OrderController::class, 'show']);
+    Route::post('/orders/{id}/cancel', [OrderController::class, 'cancel']);
 
     // Admin routes
     Route::middleware('admin')->group(function () {

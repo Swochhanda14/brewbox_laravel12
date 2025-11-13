@@ -119,9 +119,17 @@ const LoginPage = (props) => {
           </div>
           
           <div className="flex flex-col gap-2">
-            <label className="text-sm sm:text-base font-semibold text-gray-700" htmlFor="password">
-              Password
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-sm sm:text-base font-semibold text-gray-700" htmlFor="password">
+                Password
+              </label>
+              <Link
+                to="/forgot-password"
+                className="text-sm text-green-700 hover:text-green-800 font-semibold transition-colors"
+              >
+                Forgot Password?
+              </Link>
+            </div>
             <div className="relative flex items-center">
               <input
                 className="border border-gray-300 rounded-lg px-4 py-3 pr-12 text-base sm:text-lg w-full focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-gray-50 hover:bg-white"

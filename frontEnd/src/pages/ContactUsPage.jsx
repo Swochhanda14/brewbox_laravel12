@@ -1,19 +1,33 @@
 import React, { useState } from 'react'
 import Banner from '../components/Banner'
-import { FaEnvelope, FaPhone, FaMapMarkerAlt, FaFacebookF, FaTwitter, FaInstagram, FaCheckCircle, FaPaperPlane } from 'react-icons/fa'
+import { FaEnvelope, FaPhone, FaMapMarkerAlt, FaFacebookF, FaTwitter, FaInstagram, FaCheckCircle, FaPaperPlane, FaSpinner } from 'react-icons/fa'
+import { BASE_URL } from '../constants'
+import { toast } from 'react-toastify'
+import axios from 'axios'
 
 const ContactUsPage = (props) => {
   const [form, setForm] = useState({ name: '', email: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitted(true);
-    // Here you would send the form data to your backend or email service
+    setIsLoading(true);
+
+    try {
+      await axios.post(`${BASE_URL}/api/contact`, form);
+      setSubmitted(true);
+      setForm({ name: '', email: '', message: '' });
+      toast.success('Thank you for contacting us! We will get back to you soon.');
+    } catch (error) {
+      toast.error(error?.response?.data?.message || 'Failed to send message. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -166,10 +180,20 @@ const ContactUsPage = (props) => {
                       </div>
                       <button
                         type="submit"
-                        className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-green-700 to-green-800 text-white font-semibold rounded-lg hover:from-green-800 hover:to-green-900 hover:shadow-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2"
+                        disabled={isLoading}
+                        className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-green-700 to-green-800 text-white font-semibold rounded-lg hover:from-green-800 hover:to-green-900 hover:shadow-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                       >
-                        <FaPaperPlane />
-                        Send Message
+                        {isLoading ? (
+                          <>
+                            <FaSpinner className="animate-spin" />
+                            Sending...
+                          </>
+                        ) : (
+                          <>
+                            <FaPaperPlane />
+                            Send Message
+                          </>
+                        )}
                       </button>
                     </form>
                   </>
